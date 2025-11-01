@@ -8,9 +8,8 @@ from app.config import Config
 
 # Import your route blueprints
 # (Based on your app/routes/__init__.py file)
-from app.routes.main_routes import main_bp
-from app.routes.player_routes import player_bp
-from app.routes.dm_routes import dm_bp
+from app.routes import routes
+
 
 def create_app():
     """
@@ -51,9 +50,8 @@ def create_app():
     # -------------------------------------------------
     # Register Blueprints
     # -------------------------------------------------
-    app.register_blueprint(main_bp)
-    app.register_blueprint(player_bp)
-    app.register_blueprint(dm_bp)
+    for route in routes:
+        app.register_blueprint(route)
     
     app.logger.info("Blueprints registered successfully.")
 

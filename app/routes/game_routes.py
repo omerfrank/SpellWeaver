@@ -7,15 +7,15 @@ firebase = FirebaseService() # <-- Make sure this is instantiated
 
 # ... (your other routes like /action and /state) ...
 
-@game_bp.route('/health', methods=['GET'])
-def health_check():
+@game_bp.route('/test', methods=['GET'])
+def db_test():
     """API health check"""
     
     # --- Add this line to run the test ---
     test_result = firebase.run_test_query()
     
     return jsonify({
-        'status': 'healthy',
+        'status': 'test',
         'message': 'Game API is running',
         'firebase_test_result': test_result  # <-- See the result in your browser
     }), 200

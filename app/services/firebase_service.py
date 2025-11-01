@@ -45,3 +45,21 @@ class FirebaseService:
         except Exception as e:
             print(f"Error updating game state: {e}")
             return False
+    def run_test_query(self):
+        """Adds a 'hello world' message to the database under '/test_query'."""
+        try:
+            # Get a reference to a new node called 'test_query'
+            ref = db.reference('test_query')
+            
+            # Set the data at that node
+            ref.set({
+                'message': 'hello world',
+                'status': 'success'
+            })
+            
+            print("✅ Firebase test query successful.")
+            return {'status': 'success', 'path': '/test_query'}
+            
+        except Exception as e:
+            print(f"❌ Error running test query: {e}")
+            return {'status': 'error', 'message': str(e)}

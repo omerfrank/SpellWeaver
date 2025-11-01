@@ -4,8 +4,7 @@ from flask import Blueprint
 from app.routes.player_routes import player_bp
 from app.routes.dm_routes import dm_bp
 from app.routes.main_routes import main_bp
+from app.routes.game_routes import game_bp
 
 # Create a list of blueprints to register in the app
-player_blueprints = [player_bp]
-DM_blueprints = [dm_bp]
-main_bluprints = [main_bp]
+routes = [player_bp,dm_bp,main_bp,game_bp]
