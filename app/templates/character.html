@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Sheet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/character.css">
+</head>
+<body>
+    <!-- side bar -->
+    <button class="btn btn-secondary bi bi-list sticky-sidebar-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+    </button>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">הגדרות</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <a href="{{ url_for('main.home') }}" class="sidebar-item">חזרה לעמוד הבית</a>
+            <a href="{{ url_for('player.load_character_select') }}" class="sidebar-item">חזרה לבחירת דמויות</a>
+        </div>
+    </div>
+
+<!-- Main Character Sheet -->
+    <div class="container mt-4" dir="ltr">
+        <!-- Basic Character Info -->
+        <div class="character-card">
+            <div class="card-header">
+                <h3 class="mb-0">Character Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">name</label>
+                        <input type="text" class="form-control" id="name" placeholder="e.g., ziv the mighty">
+                        <label for="level" class="form-label">Level & Class</label>
+                        <input type="text" class="form-control" id="level" placeholder="e.g., Fighter 5">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Armor Class</label>
+                        <div class="clickable-stat stat-box" onclick="openBonusModal('ac')">
+                            <!-- <input type="number" class="form-control text-center mb-2" id="ac" value="12" readonly> -->
+                            <div class="stat-bonus" id="ac">10</div>
+                            <small>Click to configure</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="speed" class="form-label">Speed</label>
+                        <div class="stat-box">
+                            <input type="number" style="color: #7289da;" class="form-control stat-box stat-bonus"  id="speed" value="30">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Health Section -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="health-section">
+                            <label class="form-label mb-3">Hit Points</label>
+                            <div class="d-flex align-items-center justify-content-center health-controls">
+                                <button type="button" class="btn btn-danger me-3" onclick="changeHP(-5)" title="Damage -5">
+                                    <i class="bi bi-dash-circle"></i>
+                                </button>
+                                <button type="button" class="btn btn-danger me-2" onclick="changeHP(-1)" title="Damage -1">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                
+                                <div class="d-flex align-items-center">
+                                    <div class="text-center me-2">
+                                        <small class="text-muted d-block">Current</small>
+                                        <input type="number" class="form-control text-center current-hp" id="currentHP" value="25" style="width: 70px;">
+                                    </div>
+                                    <span class="hp-separator mx-2">/</span>
+                                    <div class="text-center ms-2">
+                                        <small class="text-muted d-block">Max</small>
+                                        <input type="number" class="form-control text-center max-hp" id="maxHP" value="25" style="width: 70px;">
+                                    </div>
+                                </div>
+                                
+                                <button type="button" class="btn btn-success ms-2" onclick="changeHP(1)" title="Heal +1">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                                <button type="button" class="btn btn-success ms-3" onclick="changeHP(5)" title="Heal +5">
+                                    <i class="bi bi-plus-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Initiative</label>
+                        <div class="clickable-stat stat-box" onclick="openBonusModal('initiative')">
+                            <div class="stat-bonus" id="initiativeTotal">+2</div>
+                            <small>Click to add bonuses</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Passive Perception</label>
+                        <div class="clickable-stat stat-box" onclick="openBonusModal('passivePerception')">
+                            <div class="stat-bonus" id="passivePerceptionTotal">12</div>
+                            <small>Click to add bonuses</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ability Scores -->
+        <div class="character-card">
+            <div class="card-header">
+                <h4 class="mb-0">Ability Scores</h4>
+            </div>
+            <div class="card-body">
+                <div class="row" id="abilityScores" >
+                    <!-- Ability scores will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="character-card">
+            <div class="card-header">
+                <h4 class="mb-0">Skills</h4>
+            </div>
+            <div class="card-body" id="skillsList">
+                <!-- Skills will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bonus Modal -->
+    <div class="modal fade" id="bonusModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bonusModalTitle">Add Bonus</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="bonusInput" class="form-label">Additional Bonus:</label>
+                    <input type="number" class="form-control" id="bonusInput" value="0">
+                    <div class="form-check mt-3" id="proficiencyCheckContainer" style="display: none;">
+                        <div class="custom-checkbox">
+                            <input type="checkbox" id="proficiencyCheck">
+                            <span class="checkmark"></span>
+                        </div>
+                        <label class="form-check-label ms-2" for="proficiencyCheck" style="cursor: pointer;">
+                            Proficient (add +2 proficiency bonus)
+                        </label>
+                    </div>
+                    <div class="mt-3" id="dexLimitContainer" style="display: none;">
+                        <label for="dexLimitInput" class="form-label">Dexterity Limit (Heavy Armor):</label>
+                        <input type="number" class="form-control" id="dexLimitInput" placeholder="Leave empty for no limit">
+                        <small class="text-muted">Heavy armor typically limits Dex bonus to +2</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBonuses()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop navbar -->
+    <nav class="footer-navbar d-none d-md-block" dir="ltr">
+        <div class="container d-flex justify-content-center">
+            <a href="{{ url_for('player.load_showcase') }}">Showcase</a>
+            <a href="{{ url_for('player.load_character') }}" class="active-link">Character</a>
+            <a href="{{ url_for('player.load_inventory') }}">Inventory</a>
+            <a href="{{ url_for('player.load_combat') }}">Combat Menu</a>
+            <a href="{{ url_for('player.load_spells') }}">Spells</a>
+            <a href="{{ url_for('player.load_background') }}" >Background & Notes</a>
+        </div>
+    </nav>
+
+    <!-- Phone navbar -->
+    <nav class="footer-navbar d-md-none" dir="ltr">
+        <div class="container-fluid">
+            <div class="row row-cols-6 g-2 text-center">
+                <div class="col">
+                    <a href="{{ url_for('player.load_showcase') }}" class="nav-link">
+                        <i class="bi bi-person-square"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_character') }}" class="nav-link active-link">
+                        <i class="bi bi-person-lines-fill"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_inventory') }}" class="nav-link">
+                        <i class="bi bi-backpack2"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_combat') }}" class="nav-link">
+                        <i class="bi bi-shield-shaded"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_spells') }}" class="nav-link">
+                        <i class="bi bi-fire"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_background') }}" class="nav-link ">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/bigproj/js/character.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,77 @@
+/* Custom styles for notes page */
+        .notes-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .note-section {
+            background-color: #23272a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #4f545c;
+        }
+
+        .note-section h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .note-section h3 i {
+            font-size: 1.2rem;
+        }
+
+        .form-control {
+            background-color: #2c2f33;
+            border: 1px solid #4f545c;
+            color: #ffffff;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-control:focus {
+            background-color: #2c2f33;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(255, 128, 237, 0.25);
+        }
+
+        .character-background {
+            min-height: 200px;
+        }
+
+        .save-btn {
+            background-color: #5865f2;
+            border: none;
+            color: #23272a;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .save-btn:hover {
+            background-color: #ff9ef0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 128, 237, 0.3);
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .char-count {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            text-align: left;
+            margin-top: 5px;
+        }

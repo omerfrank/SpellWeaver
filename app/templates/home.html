@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5e Campaign Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/home.css">
+    
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="../icons/Quest_Weaver_Icon.webp" class="navbar-logo" alt="Quest Weaver Logo">
+                    <strong>Quest Weaver</strong>
+                </div>
+                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#signInModal">
+                    <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Welcome Adventurer!</h1>
+            <p class="hero-subtitle">Your digital companion for epic D&D 5e adventures</p>
+            
+            <div class="mt-5">
+                <a href="#">
+                    <button class="btn btn-custom btn-dm">
+                        <i class="fa-solid fa-dungeon"></i> Play as DM
+                    </button>
+                </a>
+                <a href=".{{ url_for('player.load_character_select') }}">
+                    <button class="btn btn-custom btn-player">
+                        <i class="fa-solid fa-dice-d20"></i></i> Play as Player
+                    </button>
+                </a>
+            </div>
+            
+            <p class="mt-4" style="color: #b9bbbe;">
+                New to the realm? <a href="#" class="text-white" data-bs-toggle="modal" data-bs-target="#signInModal">Sign in</a> to begin your journey
+            </p>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="container py-5">
+        <h2 class="text-center mb-5">Features</h2>
+        <div class="row">
+            <div class="col-md-4 d-flex">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">📜</div>
+                    <h4>Character Management</h4>
+                    <p style="color: #b9bbbe;">Create and manage multiple characters with detailed stats, inventory, and progression tracking.</p>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">🗺️</div>
+                    <h4>Campaign Tools</h4>
+                    <p style="color: #b9bbbe;">Plan adventures, track quests, manage NPCs, and keep your world organized.</p>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex">
+                <div class="feature-card text-center">
+                    <div class="feature-icon"><img src="../icons/Quest_Weaver_Icon.webp" style="width: 6rem; height: 6rem; object-fit: contain;" alt="Quest Weaver Icon"></div>
+                    <h4>game menager</h4>
+                    <p style="color: #b9bbbe;">Connect to your character mini and the DM screen Lorem, ipsum dolor.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="mb-4">About Quest Weaver</h2>
+                    <p class="lead">Your all-in-one platform for managing Dungeons & Dragons 5th Edition campaigns.</p>
+                    <p style="color: #b9bbbe;">Whether you're a seasoned Dungeon Master crafting intricate worlds or a player embarking on your first adventure, our platform provides all the tools you need to enhance your tabletop experience.</p>
+                    <p style="color: #b9bbbe;">Built by players, for players, we understand the challenges of managing character sheets, tracking campaign notes, and keeping everyone synchronized during gameplay. Our intuitive interface brings everything together in one place.</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="feature-card">
+                        <h4>🎯 Our Mission</h4>
+                        <p style="color: #b9bbbe;">To empower tabletop gaming groups with digital tools that enhance storytelling and streamline gameplay, without getting in the way of the fun.</p>
+                        <hr style="border-color: #4f545c;">
+                        <h4>✨ What Makes Us Different</h4>
+                        <ul style="color: #b9bbbe;">
+                            <li>Designed specifically for D&D 5e rules</li>
+                            <li>Real-time collaboration features</li>
+                            <li>Mobile-friendly for play anywhere</li>
+                            <li>Free core features for everyone</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sign In Modal -->
+    <div class="modal fade" id="signInModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sign In</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="email" placeholder="adventurer@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Enter your password">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember">
+                            <label class="form-check-label" for="remember">Remember me</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                    </form>
+                    <hr class="my-4" style="border-color: #4f545c;">
+                    <p class="text-center">Don't have an account? <a href="#" style="color: #7289da;">Create one</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Navbar (Mobile - Icons, Desktop - Text Links) -->
+    <nav class="footer-navbar d-md-none">
+        <div class="container-fluid">
+            <div class="row w-100 text-center">
+                <div class="col">
+                    <a href="#home" class="nav-link active-link">
+                        <i class="fas fa-home"></i>
+                        <div>Home</div>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#features" class="nav-link">
+                        <i class="fas fa-star"></i>
+                        <div>Features</div>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#about" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        <div>About</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Footer Navbar (Desktop - Text Links) -->
+    <nav class="footer-navbar d-none d-md-block">
+        <div class="container text-center">
+            <a href="#home" class="active-link">Home</a>
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+            <span style="color: #b9bbbe; margin: 0 10px;">|</span>
+            <span style="color: #b9bbbe; font-size: 0.85rem;">© 2025 Quest Weaver</span>
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/home.js"></script>
+</body>
+</html>

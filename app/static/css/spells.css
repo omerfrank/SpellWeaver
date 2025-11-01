@@ -1,0 +1,142 @@
+
+/* Spell management specific styles */
+.spell-stats-card {
+    background-color: #23272a;
+    border: 1px solid #4f545c;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    background-color: #2c2f33;
+    border: 2px solid #4f545c;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #7289da;
+}
+
+.spell-level-card {
+    background-color: #23272a;
+    border: 1px solid #4f545c;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.spell-slot-counter {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.spell-slot {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #7289da;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.spell-slot.used {
+    background-color: #7289da;
+}
+
+.spell-item {
+    background-color: #2c2f33;
+    border: 1px solid #4f545c;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.spell-item:hover {
+    background-color: #4f545c;
+}
+
+.spell-school-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+}
+
+/* Unique colors for each spell school */
+.school-Abjuration { 
+    background-color: #4a90e2 !important; 
+}
+
+.school-Conjuration { 
+    background-color: #f5a623 !important; 
+}
+
+.school-Divination { 
+    background-color: #bd10e0 !important; 
+}
+
+.school-Enchantment { 
+    background-color: #e91e63 !important; 
+}
+
+.school-Evocation { 
+    background-color: #d0021b !important; 
+}
+
+.school-Illusion { 
+    background-color: #50e3c2 !important; 
+}
+
+.school-Necromancy { 
+    background-color: #417505 !important; 
+}
+
+.school-Transmutation { 
+    background-color: #f8e71c !important; 
+    color: #000 !important;
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: #23272a;
+    color: #ffffff;
+}
+
+.modal-header {
+    border-bottom: 1px solid #4f545c;
+}
+
+.modal-footer {
+    border-top: 1px solid #4f545c;
+}
+
+/* Form styles */
+.form-control, .form-select {
+    background-color: #2c2f33;
+    color: #ffffff;
+    border: 1px solid #4f545c;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #2c2f33;
+    color: #ffffff;
+    border-color: #7289da;
+    box-shadow: 0 0 0 0.25rem rgba(114, 137, 218, 0.25);
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #7289da;
+    border-color: #7289da;
+}
+
+.btn-primary:hover {
+    background-color: #5b6eae;
+    border-color: #5b6eae;
+}

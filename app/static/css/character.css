@@ -1,0 +1,222 @@
+/* Character sheet specific styles */
+body {
+    padding-bottom: 100px;
+}
+
+.character-card {
+    background-color: #36393f;
+    border: 1px solid #4f545c;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 5px;
+}
+
+.stat-box {
+    background: linear-gradient(135deg, #2c2f33 0%, #36393f 100%);
+    border: 1px solid #4f545c;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-color: #7289da;
+}
+
+.stat-bonus {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #7289da;
+}
+
+.health-controls button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.health-section {
+    background-color: #2c2f33;
+    border-radius: 8px;
+    padding: 15px;
+    border: 2px solid #4f545c;
+}
+
+.current-hp {
+    background-color: #dc3545;
+    border: 2px solid #dc3545 !important;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.current-hp:focus {
+    background-color: #dc3545 !important;
+    border-color: #bb2d3b !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.max-hp {
+    background-color: #198754;
+    border: 2px solid #198754 !important;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.max-hp:focus {
+    background-color: #198754 !important;
+    border-color: #157347 !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
+}
+
+.hp-separator {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.skill-row {
+    padding: 12px;
+    margin-bottom: 8px;
+    background-color: #2c2f33;
+    border-radius: 8px;
+    border: 1px solid #4f545c;
+    transition: all 0.3s ease;
+}
+
+.skill-row:hover {
+    background-color: #36393f;
+    border-color: #7289da;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Custom checkbox styling */
+.custom-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.custom-checkbox .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #2c2f33;
+    border: 2px solid #4f545c;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.custom-checkbox:hover .checkmark {
+    border-color: #7289da;
+    background-color: #36393f;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: #7289da;
+    border-color: #7289da;
+    transform: scale(1.1);
+}
+
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark:after {
+    display: block;
+    animation: checkAnimation 0.3s ease;
+}
+
+@keyframes checkAnimation {
+    0% { opacity: 0; transform: rotate(45deg) scale(0); }
+    100% { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+
+.clickable-stat {
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.clickable-stat:hover {
+    background-color: #4f545c;
+}
+
+.form-control, .form-select {
+    background-color: #2c2f33;
+    border: 1px solid #4f545c;
+    color: #ffffff;
+}
+.form-control::placeholder {
+    color: #ff80ed;
+}
+.form-control:focus, .form-select:focus {
+    background-color: #2c2f33;
+    border-color: #7289da;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(114, 137, 218, 0.25);
+}
+
+.btn-outline-primary {
+    color: #7289da;
+    border-color: #7289da;
+}
+
+.btn-outline-primary:hover {
+    background-color: #7289da;
+    border-color: #7289da;
+}
+.bleeding{
+    color: #dc3545;
+}
+.tmp-hp{
+    color: aqua;
+}
+.skill-row.proficient {
+    border-left: 4px solid #7289da;
+    background-color: #36393f;
+}
+
+.skill-row.proficient .custom-checkbox .checkmark {
+    background-color: #7289da;
+    border-color: #7289da;
+}
+
+.skill-row.proficient .custom-checkbox .checkmark:after {
+    display: block;
+}
+.checked-skill{
+    background: #d6e1ff;
+    color: #7289da;
+}

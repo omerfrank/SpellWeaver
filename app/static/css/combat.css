@@ -1,0 +1,217 @@
+.section-card {
+    background-color: #23272a;
+    border: 1px solid #4f545c;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #4f545c;
+    padding-bottom: 10px;
+}
+
+.ability-card {
+    background-color: #2c2f33;
+    border: 1px solid #4f545c;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.ability-card:hover {
+    transform: translateY(-2px);
+    border-color: #5d6168;
+}
+
+.ability-card .btn-danger {
+    position: relative;
+    z-index: 10;
+}
+
+.ability-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.ability-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.ability-type-badge {
+    background-color: #5865f2;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.passive-badge {
+    background-color: #57f287;
+    color: #23272a;
+}
+
+.ability-description {
+    color: #b9bbbe;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.ability-stats {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.stat-item {
+    font-size: 0.85rem;
+    color: #b9bbbe;
+}
+
+.stat-label {
+    color: #8e9297;
+}
+
+.uses-display {
+    display: inline-flex;
+    gap: 5px;
+}
+
+.use-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #5865f2;
+    display: inline-block;
+}
+
+.use-dot.used {
+    background-color: #4f545c;
+}
+
+.action-cost-badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #23272a;
+
+}
+
+.badge-action {
+    background-color: #ed4245;
+}
+
+.badge-bonus {
+    background-color: #faa61a;
+}
+
+.badge-reaction {
+    background-color: #5865f2;
+}
+
+.badge-free {
+    background-color: #57f287;
+}
+
+.btn-use {
+    background-color: #5865f2;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    transition: background-color 0.3s;
+}
+
+.btn-use:hover {
+    background-color: #4752c4;
+}
+
+.btn-use:disabled {
+    background-color: #4f545c;
+    cursor: not-allowed;
+}
+
+.btn-add {
+    background-color: #57f287;
+    color: #23272a;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-add:hover {
+    background-color: #3ba55d;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+.btn-danger {
+    background-color: #ed4245;
+    border: none;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c03537;
+}
+
+@media (max-width: 767px) {
+    .mobile-icon-only {
+        padding: 8px 12px;
+    }
+    .mobile-icon-only .btn-text {
+        display: none;
+    }
+}
+
+.generic-action-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: #2c2f33;
+    border: 1px solid #4f545c;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.action-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.modal-content {
+    background-color: #23272a;
+    color: #ffffff;
+}
+
+.modal-header {
+    border-bottom: 1px solid #4f545c;
+}
+
+.modal-footer {
+    border-top: 1px solid #4f545c;
+}
+
+.btn-close {
+    filter: invert(1);
+}

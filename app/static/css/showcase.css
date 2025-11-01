@@ -1,0 +1,51 @@
+/* Showcase - New Styles */
+.showcase-main-card {
+    background-color: #313339;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.character-art {
+    max-width: 100%;
+    height: auto;
+    max-height: 500px; 
+    width: auto; 
+    object-fit: contain; 
+}
+
+.stat-circle {
+    background-color: #4f545c;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #fff;
+    border: 2px solid #5a5f6b;
+}
+
+.stat-circle span {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.text-danger {
+    color: #a04e4e !important;
+}
+.text-secondary {
+    color: #9299a5 !important;
+}
+
+/* Override a Bootstrap class for better spacing */
+.main-content {
+    padding-bottom: 70px; /* Adjust padding to make room for the footer navbar */
+}
+/* New rule to wrap character details in a bubble */
+.character-info-bubble {
+    background-color: #313339;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Showcase</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/showcase.css">
+</head>
+<body>
+     <!-- Side bar -->
+    <button class="btn btn-secondary bi bi-list sticky-sidebar-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+    </button>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">הגדרות</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <a href="{{ url_for('main.home') }}" class="sidebar-item">חזרה לעמוד הבית</a>
+            <a href="{{ url_for('player.load_character_select') }}" class="sidebar-item">חזרה לבחירת דמויות</a>
+        </div>
+    </div>
+    <!-- main page -->
+    <div class="main-content">
+    <div class="container my-5">
+        <div class="row showcase-main-card rounded-5 py-4" dir="ltr">
+            <div class="col-12 col-md-5 d-flex align-items-center justify-content-center">
+                <img src="/bigproj/img/paldin.webp" alt="character art" class="character-art img-fluid p-3">
+            </div>
+            <div class="col-12 col-md-7 p-3">
+                <div class="d-flex flex-column align-items-center align-items-md-start">
+                    <h1 class="fs-1 fw-bold text-light mb-0">DOON T. SHMIFF</h1>
+                    <p class="text-secondary fw-normal fs-6">L1 1x warlock 2x monk</p>
+                </div>
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-4 my-4 text-center">
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="fs-4 fw-bold text-danger">11/24</span>
+                        <small class="text-secondary">HP</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="fs-4 fw-bold text-light">16</span>
+                        <small class="text-secondary">AC</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="fs-4 fw-bold text-light">30ft</span>
+                        <small class="text-secondary">Speed</small>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-around flex-wrap my-4 showcase-stats">
+                    <div class="d-flex flex-column align-items-center stat-circle">
+                        <span class="fs-5 fw-bold" dir="ltr">-1</span>
+                        <small>STR</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center stat-circle">
+                        <span class="fs-5 fw-bold" dir="ltr">+3</span>
+                        <small>DEX</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center stat-circle">
+                        <span class="fs-5 fw-bold" dir="ltr">+2</span>
+                        <small>CON</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center stat-circle">
+                        <span class="fs-5 fw-bold" dir="ltr">-1</span>
+                        <small>INT</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center stat-circle">
+                        <span class="fs-5 fw-bold" dir="ltr">+2</span>
+                        <small>WIS</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center stat-circle">
+                        <span class="fs-5 fw-bold" dir="ltr">+1</span>
+                        <small>CHA</small>
+                    </div>
+                    <div class="col-12 p-3">
+                        <h3 class="text-light">Background</h3>
+                        <p class="text-secondary">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Desktop navbar -->
+    <nav class="footer-navbar d-none d-md-block" dir="ltr">
+        <div class="container d-flex justify-content-center">
+            <a href="{{ url_for('player.load_showcase') }}"class="active-link">Showcase</a>
+            <a href="{{ url_for('player.load_character') }}">Character</a>
+            <a href="{{ url_for('player.load_inventory') }}">Inventory</a>
+            <a href="{{ url_for('player.load_combat') }}">Combat Menu</a>
+            <a href="{{ url_for('player.load_spells') }}">Spells</a>
+            <a href="{{ url_for('player.load_background') }}" >Background & Notes</a>
+        </div>
+    </nav>
+
+    <!-- Phone navbar -->
+    <nav class="footer-navbar d-md-none" dir="ltr">
+        <div class="container-fluid">
+            <div class="row row-cols-6 g-2 text-center">
+                <div class="col">
+                    <a href="{{ url_for('player.load_showcase') }}" class="nav-link active-link">
+                        <i class="bi bi-person-square"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_character') }}" class="nav-link">
+                        <i class="bi bi-person-lines-fill"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_inventory') }}" class="nav-link">
+                        <i class="bi bi-backpack2"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_combat') }}" class="nav-link">
+                        <i class="bi bi-shield-shaded"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_spells') }}" class="nav-link">
+                        <i class="bi bi-fire"></i>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('player.load_background') }}" class="nav-link ">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

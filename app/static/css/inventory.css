@@ -1,0 +1,151 @@
+.inventory-section {
+    background-color: #23272a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #4f545c;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #ffffff;
+    border-bottom: 2px solid #4f545c;
+    padding-bottom: 10px;
+}
+
+/* Currency Styles */
+.currency-display {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.currency-item {
+    background-color: #2c2f33;
+    padding: 15px 20px;
+    border-radius: 5px;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+    border: 1px solid #4f545c;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.currency-item:hover {
+    background-color: #36393f;
+    transform: translateY(-2px);
+}
+
+.currency-icon {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.currency-copper { 
+    color: #cd7f32; 
+}
+
+.currency-silver { 
+    color: #c0c0c0; 
+}
+
+.currency-gold { 
+    color: #ffd700; 
+}
+
+.currency-platinum { 
+    color: #4EE2EC ; 
+}
+
+.currency-emerald { 
+    color: #50C878 ; 
+}
+
+/* Item Card Styles */
+.item-card {
+    background-color: #2c2f33;
+    border: 1px solid #4f545c;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: background-color 0.3s, transform 0.2s;
+    cursor: pointer;
+}
+
+.item-card:hover {
+    background-color: #36393f;
+    transform: translateY(-2px);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.item-type {
+    background-color: #4f545c;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+
+.item-description {
+    color: #b9bbbe;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.equipped-badge {
+    background-color: #43b581;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.consumable-count {
+    background-color: #7289da;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 50%;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Add Item Button */
+.btn-add-item {
+    width: 100%;
+    background-color: #43b581;
+    border: none;
+    color: white;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.btn-add-item:hover {
+    background-color: #3ca374;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #72767d;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}

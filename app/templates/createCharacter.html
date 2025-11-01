@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Character - Quest Weaver</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="stylesheet" href="static/css/createCharacter.css">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="../icons/Quest_Weaver_Icon.webp" class="navbar-logo" alt="Quest Weaver Logo">
+                    <strong>Quest Weaver</strong>
+                </div>
+                <button class="btn btn-outline-light btn-sm" onclick="goBack()">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1>Create New Character</h1>
+            <p class="text-muted">Begin your adventure by creating a new character</p>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="container py-4">
+        <div class="form-container">
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <div class="preview-avatar" id="previewAvatar">
+                    👤
+                </div>
+                <div class="preview-name" id="previewName">New Character</div>
+            </div>
+
+            <!-- Character Name -->
+            <div class="mb-4">
+                <label for="characterName" class="form-label">Character Name *</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="characterName" 
+                    placeholder="Enter character name..."
+                    maxlength="50"
+                    oninput="updatePreview()"
+                >
+                <small class="text-muted">Maximum 50 characters</small>
+            </div>
+
+            <!-- Image Gallery -->
+            <div class="mb-4">
+                <label class="form-label section-title">Choose Character Image *</label>
+                <div class="image-gallery" id="imageGallery">
+                    <!-- Images will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <button class="btn btn-cancel" onclick="goBack()">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button class="btn btn-create" id="createBtn" onclick="createCharacter()" disabled>
+                    <i class="fas fa-plus-circle me-2"></i>Create Character
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Navbar (Mobile - Icons) -->
+    <nav class="footer-navbar d-md-none">
+        <div class="container-fluid">
+            <div class="row w-100 text-center">
+                <div class="col">
+                    <a href="#" class="nav-link" onclick="goBack()">
+                        <i class="fas fa-users"></i>
+                        <div>Characters</div>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="#" class="nav-link active-link" onclick="return false;">
+                        <i class="fas fa-user-plus"></i>
+                        <div>Create</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Footer Navbar (Desktop - Text Links) -->
+    <nav class="footer-navbar d-none d-md-block">
+        <div class="container text-center">
+            <a href="#" onclick="goBack()">Characters</a>
+            <a href="#" class="active-link" onclick="return false;">Create Character</a>
+            <span style="color: #b9bbbe; margin: 0 10px;">|</span>
+            <span style="color: #b9bbbe; font-size: 0.85rem;">© 2025 Quest Weaver</span>
+        </div>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/createCharacter.js"></script>
+</body>
+</html>
