@@ -1,7 +1,6 @@
 from flask import Flask
-from app.routes import DM_blueprints # Import the list of blueprints
-from app.routes import player_blueprints  # Import the list of blueprints
-from app.routes import main_bluprints  # Import the list of blueprints
+from app.routes import DM_blueprints, player_blueprints, main_bluprints # Import the list of blueprints
+
 
 def create_app():
     app = Flask(__name__)
@@ -12,6 +11,7 @@ def create_app():
     # Register all blueprints for player
     for blueprint in player_blueprints:
         app.register_blueprint(blueprint,url_prefix='/player')
+    # Register all blueprints for main app
     for blueprint in main_bluprints:
         app.register_blueprint(blueprint)
 
