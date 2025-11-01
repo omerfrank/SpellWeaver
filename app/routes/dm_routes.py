@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 
 # Create a blueprint instance
-dm_bp = Blueprint('dm', __name__, template_folder='../templates',static_folder='../static')
+dm_bp = Blueprint('dm', __name__, url_prefix='/dm',template_folder='../templates',static_folder='../static')
 
 @dm_bp.route('/users')
 def get_users():

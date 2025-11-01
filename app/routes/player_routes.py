@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 
 # Create a blueprint instance
-player_bp = Blueprint('player', __name__, template_folder='../templates',static_folder='../static')
+player_bp = Blueprint('player', __name__, url_prefix='/player',template_folder='../templates',static_folder='../static')
 
 @player_bp.route('/users')
 def get_users():
