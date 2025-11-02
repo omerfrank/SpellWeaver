@@ -47,7 +47,7 @@
             </div>
             
             <p class="mt-4" style="color: #b9bbbe;">
-                New to the realm? <a href="#" class="text-white" data-bs-toggle="modal" data-bs-target="#signInModal">Sign in</a> to begin your journey
+                New to the realm? <a href="#" class="text-white" data-bs-toggle="modal" data-bs-target="#signInModal">Sign Up</a> to begin your journey
             </p>
         </div>
     </section>
@@ -109,35 +109,73 @@
     </section>
 
     <!-- Sign In Modal -->
-    <div class="modal fade" id="signInModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sign In</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="email" placeholder="adventurer@example.com">
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" placeholder="Enter your password">
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember">
-                            <label class="form-check-label" for="remember">Remember me</label>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Sign In</button>
-                    </form>
-                    <hr class="my-4" style="border-color: #4f545c;">
-                    <p class="text-center">Don't have an account? <a href="#" style="color: #7289da;">Create one</a></p>
-                </div>
+    <!DOCTYPE html>
+<html lang="en">
+<body>
+<div class="modal fade" id="signInModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sign In</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class.modal-body>
+                <form id="signInForm">
+                    <div id="signInError" class="alert alert-danger" style="display: none;"></div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="signInEmail" placeholder="adventurer@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signInPassword" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="signInButton">
+                        Sign In
+                    </button>
+                </form>
+                <hr class="my-4" style="border-color: #4f545c;">
+                <p class="text-center">Don't have an account? 
+                    <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#signUpModal" style="color: #7289da;">Create one</a>
+                </p>
             </div>
         </div>
     </div>
+</div>
+
+<div class="modal fade" id="signUpModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="signUpForm">
+                    <div id="signUpError" class="alert alert-danger" style="display: none;"></div>
+                    <div class="mb-3">
+                        <label for="signUpEmail" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="signUpEmail" placeholder="adventurer@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signUpPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signUpPassword" placeholder="Must be at least 6 characters" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100" id="signUpButton">
+                        Create Account
+                    </button>
+                </form>
+                <hr class="my-4" style="border-color: #4f545c;">
+                <p class="text-center">Already have an account? 
+                    <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#signInModal" style="color: #7289da;">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+    
+</body>
+</html>
 
     <!-- Footer Navbar (Mobile - Icons, Desktop - Text Links) -->
     <nav class="footer-navbar d-md-none">
@@ -178,5 +216,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="static/js/home.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+    <script src="static/js/auth.js"></script>
 </body>
 </html>

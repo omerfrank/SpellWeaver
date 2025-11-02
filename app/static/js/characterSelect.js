@@ -142,13 +142,13 @@ function selectCharacter(characterId) {
     // TODO: Redirect to character sheet or game page
     window.localStorage.clear();
     window.localStorage.setItem("characterId", characterId)
-    window.location.href = "/bigproj/html/player/showcase.html"
+    window.location.href = "/player/combat.html"
 }
 
 // Create new character
 function createNewCharacter() {
     console.log('Creating new character');
-    window.location.href = "/bigproj/html/createCharacter.html"
+    window.location.href = "/player/combat.html"
 }
 
 function logout() {
