@@ -20,7 +20,7 @@ class FirebaseService:
     def update_player(self, player_id, data):
         """Update player data in Firebase"""
         try:
-            ref = db.reference(f'players/{player_id}')
+            ref = db.reference(f'users/{player_id}')
             ref.update(data)
             return True
         except Exception as e:
