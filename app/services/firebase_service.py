@@ -26,7 +26,16 @@ class FirebaseService:
         except Exception as e:
             print(f"Error updating player: {e}")
             return False
-    
+    def get_player_characters(self, player_id):
+        """Get all characters for a specific player"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters')
+            characters = ref.get()
+            return characters if characters else {}
+        except Exception as e:
+            print(f"Error getting player characters: {e}")
+            return None
+        
     def get_game_state(self):
         """Get current game state"""
         try:
