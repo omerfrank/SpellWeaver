@@ -19,7 +19,7 @@ class Config:
     PROCESS_INTERVAL = int(os.getenv('PROCESS_INTERVAL', 3))
     
     # Game settings
-    GRID_SIZE = (30, 30)
+    GRID_SIZE = (8, 10)
     CELL_SIZE = 50
 
 class DevelopmentConfig(Config):
