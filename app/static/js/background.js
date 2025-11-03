@@ -6,7 +6,8 @@
             { id: 'clues', countId: 'clueCount' },
             { id: 'sessionNotes', countId: 'sessionCount' },
             { id: 'locations', countId: 'locCount' },
-            { id: 'goals', countId: 'goalCount' },
+            { id: 'goals', countId:
+                 'goalCount' },
             { id: 'additionalNotes', countId: 'addCount' }
         ];
 
