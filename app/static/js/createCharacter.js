@@ -6,17 +6,6 @@ const availableImages = [
     // Add more images as needed
 ];
 
-// Firebase configuration (to be filled in later)
-const firebaseConfig = {
-    // apiKey: "YOUR_API_KEY",
-    // authDomain: "YOUR_AUTH_DOMAIN",
-    // databaseURL: "YOUR_DATABASE_URL",
-    // projectId: "YOUR_PROJECT_ID",
-    // storageBucket: "YOUR_STORAGE_BUCKET",
-    // messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    // appId: "YOUR_APP_ID"
-};
-
 let selectedImage = null;
 
 // Initialize page
@@ -107,7 +96,7 @@ function showAlert(message, type = 'success') {
     }, 5000);
 }
 
-// Create character
+// Create character - Updated to use Flask API
 async function createCharacter() {
     const name = document.getElementById('characterName').value.trim();
     
@@ -120,74 +109,50 @@ async function createCharacter() {
     createBtn.disabled = true;
     createBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
 
-    // Create character object
-    const newCharacter = {
-        id: generateCharacterId(),
+    // Create character object to send to API
+    const characterData = {
         name: name,
-        avatar: selectedImage,
-        class: 'Adventurer', // Default class
-        race: 'Human', // Default race
-        level: 1,
-        hp: 10,
-        maxHp: 10,
-        ac: 10,
-        proficiencyBonus: 2,
-        createdAt: new Date().toISOString()
+        avatar: selectedImage
     };
 
     try {
-        // TODO: Replace with Firebase save
-        // await saveCharacterToFirebase(newCharacter);
-        
-        // Simulate saving delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        console.log('Character created:', newCharacter);
-        showAlert('Character created successfully!', 'success');
-        
-        // Redirect to character select after 1.5 seconds
-        setTimeout(() => {
-            window.location.href = '/bigproj/html/characterSelect.html';
-        }, 1500);
+        // Call your Flask API
+        const response = await fetch('/api/game/createCharacter', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(characterData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.status === 'success') {
+            console.log('Character created successfully:', result);
+            showAlert('Character created successfully!', 'success');
+            
+            // Redirect to character select after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = '/player/characterSelect';
+            }, 1500);
+        } else {
+            // Handle error response from server
+            throw new Error(result.message || 'Failed to create character');
+        }
         
     } catch (error) {
         console.error('Error creating character:', error);
-        showAlert('Failed to create character. Please try again.', 'danger');
+        showAlert(`Failed to create character: ${error.message}`, 'danger');
+        
+        // Re-enable button
         createBtn.disabled = false;
         createBtn.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Create Character';
     }
 }
 
-// Generate unique character ID
-function generateCharacterId() {
-    return 'char_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
 // Go back to character select
 function goBack() {
     if (confirm('Are you sure? Any unsaved changes will be lost.')) {
-        window.location.href = '/bigproj/html/characterSelect.html';
+        window.location.href = '/player/characterSelect';
     }
 }
-
-// Firebase functions (to be implemented)
-/*
-async function saveCharacterToFirebase(character) {
-    // TODO: Implement Firebase save
-    const user = firebase.auth().currentUser;
-    if (!user) {
-        throw new Error('User not authenticated');
-    }
-    
-    await firebase.database()
-        .ref(`users/${user.uid}/characters/${character.id}`)
-        .set(character);
-}
-
-// Initialize Firebase
-function initializeFirebase() {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-}
-*/

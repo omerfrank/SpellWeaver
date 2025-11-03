@@ -8,7 +8,7 @@ firebase_service = FirebaseService()
 @player_bp.route('/background')
 @login_required
 def load_background():
-    return render_template('background.html', name='ziv')
+    return render_template('background.html')
 
 @player_bp.route('/character')
 @login_required
@@ -45,27 +45,3 @@ def load_showcase():
 def load_spells():
     return render_template('spells.html')
 
-@player_bp.route('/api/characters', methods=['GET'])
-@login_required
-def get_characters():
-    """
-    API endpoint to fetch all characters for the logged-in user.
-    """
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({"status": "error", "message": "User not logged in"}), 401
-    
-    characters_data = firebase_service.get_player_characters(user_id)
-    
-    if characters_data is None:
-        return jsonify({"status": "error", "message": "Failed to fetch characters"}), 500
-    
-    # Convert from Firebase object (with keys) to a list
-    characters_list = [character for key, character in characters_data.items()]
-    print("success")
-    return jsonify({"status": "success", "characters": characters_list}), 200
-
-@player_bp.route('/test')
-@login_required
-def test():
-    return {"message": "player works!"}

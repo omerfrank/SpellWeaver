@@ -143,11 +143,7 @@ class FirebaseService:
             
             print(f"✅ Character '{character_name}' created with ID: {character_id}")
             
-            return {
-                'success': True,
-                'characterId': character_id,
-                'characterName': character_name
-            }
+            return character_id  
             
         except ValueError as ve:
             print(f"❌ Validation error: {ve}")
