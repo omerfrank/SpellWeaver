@@ -1,8 +1,22 @@
 // Available character images
 const availableImages = [
+    '/static/img/Adventurer.webp',
+    '/static/img/cleric.webp',
+    '/static/img/angel.webp',
+    '/static/img/dragon.webp',
+    '/static/img/food.webp',
+    '/static/img/goblin.webp',
+    '/static/img/luka.webp',
+    '/static/img/oracle.webp',
     '/static/img/paldin.webp',
-    '/static/img/wizard.webp',
-    '/static/img/warlock.webp',
+    '/static/img/dark-paladin.webp',
+    '/static/img/telepath.webp',
+    '/static/img/ranger.webp',
+    '/static/img/samurai.webp',
+    '/static/img/warloc.webp',
+    '/static/img/warlock2.webp',
+    '/static/img/zombie.webp',
+    
     // Add more images as needed
 ];
 

@@ -57,7 +57,7 @@ function createCharacterCard(character) {
     // Handle Firebase data structure - use the pushed key as ID if characterId not set
     const charId = character.characterId || 'unknown';
     const charName = character.name || 'Unknown Character';
-    const charImg = character.img || '/bigproj/img/paldin.webp'; // Default image
+    const charImg = character.img || '/static/img/Adventurer.webp'; // Default image
     const charRace = character.race || 'Unknown';
     const charClass = character.class || 'Adventurer';
     const charLevel = character.level || 1;
