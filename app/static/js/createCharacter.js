@@ -1,8 +1,8 @@
 // Available character images
 const availableImages = [
-    '/bigproj/img/paldin.webp',
-    '/bigproj/img/wizard.webp',
-    '/bigproj/img/warlock.webp',
+    '/static/img/paldin.webp',
+    '/static/img/wizard.webp',
+    '/static/img/warlock.webp',
     // Add more images as needed
 ];
 
