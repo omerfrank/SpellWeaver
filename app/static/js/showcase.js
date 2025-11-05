@@ -123,10 +123,10 @@ function displayCharacter(character) {
     }
 
     // Background
-    const backgroundElement = document.querySelector('.col-12.p-3 p');
+    const backgroundElement = document.getElementById('Background');
     if (backgroundElement && character.background) {
         const background = character.background.charBackground || 
-                          'No background story written yet.';
+                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
         backgroundElement.textContent = background;
     }
 }
