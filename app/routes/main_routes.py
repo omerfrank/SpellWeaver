@@ -9,4 +9,5 @@ def test():
     return {"message": "test works!"}
 @main_bp.route('/')
 def home():
+    print ("home")
     return render_template('home.html')

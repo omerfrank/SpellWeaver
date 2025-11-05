@@ -35,6 +35,16 @@ class FirebaseService:
         except Exception as e:
             print(f"Error getting player characters: {e}")
             return None
+    def get_player_character(self,player_id,character_id):
+        """GET a specif character via character id"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}')
+            characters = ref.get()
+            return characters if characters else {}
+        except Exception as e:
+            print(f"Error getting player characters: {e}")
+            return None
+            
     def create_new_player_characters(self, player_id, character_name, character_img_link):
         """Create new character in Firebase with validation"""
         

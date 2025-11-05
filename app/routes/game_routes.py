@@ -40,6 +40,30 @@ def get_characters():
     print("success")
     return jsonify({"status": "success", "characters": characters_list}), 200
 
+@game_bp.route('/character/<character_id>', methods=['GET'])
+@login_required
+def get_character(character_id):
+    """
+    API endpoint to fetch a specific character for the logged-in user.
+    """
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    if not character_id:
+        return jsonify({"status": "error", "message": "Character ID is required"}), 400
+    
+    character_data = firebase.get_player_character(user_id, character_id)
+    
+    if character_data is None:
+        return jsonify({"status": "error", "message": "Failed to fetch character"}), 500
+    
+    if not character_data:
+        return jsonify({"status": "error", "message": "Character not found"}), 404
+    
+    print(f"✅ Character fetched successfully: {character_data.get('name', 'Unknown')}")
+    return jsonify({"status": "success", "character": character_data}), 200
+
 @game_bp.route('/createCharacter', methods=['POST'])
 @login_required
 def create_character_api():
