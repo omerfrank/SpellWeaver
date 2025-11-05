@@ -200,3 +200,21 @@ class FirebaseService:
         except Exception as e:
             print(f"❌ Error running test query: {e}")
             return {'status': 'error', 'message': str(e)}
+    def get_background_info(self,player_id,character_id):
+        """GET a specif character via character id"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/background')
+            characters = ref.get()
+            return characters if characters else {}
+        except Exception as e:
+            print(f"Error getting player characters: {e}")
+            return None
+    def save_background_info(self,player_id,character_id,data):
+        """GET a specif character via character id"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/background')
+            ref.set(data)
+            return True
+        except Exception as e:
+            print(f"Error getting player characters: {e}")
+            return False

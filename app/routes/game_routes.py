@@ -7,7 +7,7 @@ game_bp = Blueprint('game', __name__, url_prefix='/api/game')
 firebase = FirebaseService() # <-- Make sure this is instantiated
 
 
-@game_bp.route('/test', methods=['GET'])
+@game_bp.route('/test', methods=['GET','POST'])
 def db_test():
     """API health check"""
     
@@ -102,3 +102,31 @@ def create_character_api():
         # app.logger.error(f"Error creating character: {e}") # Good for production
         print(f"Error creating character: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@game_bp.route('/saveBackground/<character_id>', methods=['POST'])
+@login_required
+def save_background(character_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    data = request.get_json()
+    success = firebase.save_background_info(user_id,character_id,data)
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save data to database"}), 500
+
+@game_bp.route('/loadBackground/<character_id>', methods=['GET'])
+@login_required
+def load_background(character_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    background_data = firebase.get_background_info(user_id,character_id)
+    
+    if background_data is None:
+        return jsonify({"status": "error", "message": "Failed to fetch characters"}), 500
+    
+    print("success")
+    return jsonify(background_data), 200
