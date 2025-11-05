@@ -14,19 +14,197 @@ const inventoryData = {
     }
 };
 
-// Initialize with sample data
-function initializeSampleData() {
-    inventoryData.currency = { copper: 45, silver: 23, gold: 12, platinum:12, emerald:12  };
-    inventoryData.items.equipped = [
-        { id: '1', name: 'Longsword', type: 'weapon', description: '+1 magical sword', equipped: true, notes: 'Found in the dragon\'s lair' }
-    ];
-    inventoryData.items.consumables = [
-        { id: '2', name: 'Potion of Healing', type: 'consumable', description: 'Restores 2d4+2 hit points', quantity: 3 }
-    ];
-    inventoryData.items.general = [
-        { id: '3', name: 'Rope', type: 'general', description: '50 feet of hempen rope', equipped: false, notes: '' }
-    ];
-    renderInventory();
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadInventoryFromServer();
+    
+    // Show/hide quantity field based on item type
+    document.getElementById('itemType').addEventListener('change', function() {
+        const quantityField = document.getElementById('quantityField');
+        const equippedField = document.getElementById('equippedField');
+        
+        if (this.value === 'consumable') {
+            quantityField.style.display = 'block';
+            equippedField.style.display = 'none';
+        } else {
+            quantityField.style.display = 'none';
+            equippedField.style.display = 'block';
+        }
+    });
+});
+
+/**
+ * Load inventory data from the server
+ */
+async function loadInventoryFromServer() {
+    try {
+        const characterId = localStorage.getItem('selectedCharacterId');
+        
+        if (!characterId) {
+            console.error('No character selected');
+            showError('No character selected. Please select a character.');
+            return;
+        }
+
+        showLoading(true);
+
+        const response = await fetch(`/api/game/loadInventory/${characterId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.status === 'success') {
+            const serverInventory = result.inventory;
+            
+            // Merge server data with local structure (to handle missing fields)
+            if (serverInventory.currency) {
+                inventoryData.currency = { ...inventoryData.currency, ...serverInventory.currency };
+            }
+            
+            if (serverInventory.items) {
+                inventoryData.items.equipped = serverInventory.items.equipped || [];
+                inventoryData.items.consumables = serverInventory.items.consumables || [];
+                inventoryData.items.general = serverInventory.items.general || [];
+            }
+            
+            renderInventory();
+        } else {
+            throw new Error(result.message || 'Failed to load inventory');
+        }
+    } catch (error) {
+        console.error('Error loading inventory:', error);
+        showError(`Failed to load inventory: ${error.message}`);
+        // Still render with empty data
+        renderInventory();
+    } finally {
+        showLoading(false);
+    }
+}
+
+/**
+ * Save inventory data to the server
+ */
+async function saveInventoryToServer() {
+    try {
+        const characterId = localStorage.getItem('selectedCharacterId');
+        
+        if (!characterId) {
+            console.error('No character selected');
+            return false;
+        }
+
+        const response = await fetch(`/api/game/saveInventory/${characterId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(inventoryData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.status === 'success') {
+            return true;
+        } else {
+            throw new Error(result.message || 'Failed to save inventory');
+        }
+    } catch (error) {
+        console.error('Error saving inventory:', error);
+        showError(`Failed to save inventory: ${error.message}`);
+        return false;
+    }
+}
+
+/**
+ * Show/hide loading state
+ */
+function showLoading(show) {
+    if (show) {
+        if (!document.getElementById('inventoryLoadingOverlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'inventoryLoadingOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(44, 47, 51, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p style="color: #ffffff; margin-top: 20px;">Loading inventory...</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+    } else {
+        const overlay = document.getElementById('inventoryLoadingOverlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+    const container = document.querySelector('.container.mt-4');
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.role = 'alert';
+    errorDiv.innerHTML = `
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    if (container) {
+        container.insertBefore(errorDiv, container.firstChild);
+    }
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+/**
+ * Show success message
+ */
+function showSuccess(message) {
+    const container = document.querySelector('.container.mt-4');
+    
+    const successDiv = document.createElement('div');
+    successDiv.className = 'alert alert-success alert-dismissible fade show';
+    successDiv.role = 'alert';
+    successDiv.innerHTML = `
+        <i class="bi bi-check-circle-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    if (container) {
+        container.insertBefore(successDiv, container.firstChild);
+    }
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
 }
 
 // Render all inventory sections
@@ -101,12 +279,17 @@ function getTypeLabel(type) {
 }
 
 // Add new item
-window.addItem = function() {
+window.addItem = async function() {
     const name = document.getElementById('itemName').value;
     const type = document.getElementById('itemType').value;
     const description = document.getElementById('itemDescription').value;
     const equipped = document.getElementById('itemEquipped').checked;
     const quantity = document.getElementById('itemQuantity').value;
+
+    if (!name) {
+        showError('Item name is required');
+        return;
+    }
 
     const newItem = {
         id: Date.now().toString(),
@@ -126,22 +309,25 @@ window.addItem = function() {
         inventoryData.items.general.push(newItem);
     }
 
-    // Here you would save to Firebase
-    // saveToFirebase(inventoryData);
-
-    renderInventory();
-    bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
-    document.getElementById('addItemForm').reset();
+    // Save to Firebase
+    const success = await saveInventoryToServer();
+    
+    if (success) {
+        renderInventory();
+        bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+        document.getElementById('addItemForm').reset();
+        showSuccess('Item added successfully');
+    }
 };
 
 // Delete item
-window.deleteItem = function(itemId) {
+window.deleteItem = async function(itemId) {
     inventoryData.items.equipped = inventoryData.items.equipped.filter(item => item.id !== itemId);
     inventoryData.items.consumables = inventoryData.items.consumables.filter(item => item.id !== itemId);
     inventoryData.items.general = inventoryData.items.general.filter(item => item.id !== itemId);
     
-    // Here you would update Firebase
-    // saveToFirebase(inventoryData);
+    // Save to Firebase
+    await saveInventoryToServer();
     
     renderInventory();
 };
@@ -182,7 +368,7 @@ window.adjustEditQuantity = function(change) {
 };
 
 // Save edited item
-window.saveEditedItem = function() {
+window.saveEditedItem = async function() {
     const itemId = document.getElementById('editItemId').value;
     const name = document.getElementById('editItemName').value;
     const description = document.getElementById('editItemDescription').value;
@@ -219,11 +405,14 @@ window.saveEditedItem = function() {
             }
         }
 
-        // Here you would update Firebase
-        // saveToFirebase(inventoryData);
-
-        renderInventory();
-        bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
+        // Save to Firebase
+        const success = await saveInventoryToServer();
+        
+        if (success) {
+            renderInventory();
+            bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
+            showSuccess('Item updated successfully');
+        }
     }
 };
 
@@ -233,6 +422,7 @@ window.deleteItemFromModal = function() {
     if (confirm('Are you sure you want to delete this item?')) {
         window.deleteItem(itemId);
         bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
+        showSuccess('Item deleted successfully');
     }
 };
 
@@ -250,7 +440,7 @@ window.openCurrencyModal = function(type) {
 };
 
 // Adjust currency
-window.adjustCurrency = function(action) {
+window.adjustCurrency = async function(action) {
     const type = document.getElementById('currencyType').value;
     const amount = parseInt(document.getElementById('currencyChangeAmount').value) || 0;
     
@@ -267,25 +457,6 @@ window.adjustCurrency = function(action) {
     document.getElementById('currentCurrencyAmount').textContent = inventoryData.currency[type];
     renderCurrency();
 
-    // Here you would update Firebase
-    // saveToFirebase(inventoryData);
+    // Save to Firebase
+    await saveInventoryToServer();
 };
-
-// Show/hide quantity field based on item type
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('itemType').addEventListener('change', function() {
-        const quantityField = document.getElementById('quantityField');
-        const equippedField = document.getElementById('equippedField');
-        
-        if (this.value === 'consumable') {
-            quantityField.style.display = 'block';
-            equippedField.style.display = 'none';
-        } else {
-            quantityField.style.display = 'none';
-            equippedField.style.display = 'block';
-        }
-    });
-
-    // Initialize with sample data on load
-    initializeSampleData();
-});

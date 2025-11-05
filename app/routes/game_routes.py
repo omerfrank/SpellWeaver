@@ -130,3 +130,32 @@ def load_background(character_id):
     
     print("success")
     return jsonify(background_data), 200
+
+@game_bp.route('/loadInventory/<character_id>', methods=['GET'])
+@login_required
+def load_inventory(character_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    inventory_data = firebase.get_inventory(user_id, character_id)
+    
+    if inventory_data is None:
+        return jsonify({"status": "error", "message": "Failed to fetch inventory"}), 500
+    
+    return jsonify({"status": "success", "inventory": inventory_data}), 200
+
+@game_bp.route('/saveInventory/<character_id>', methods=['POST'])
+@login_required
+def save_inventory(character_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    success = firebase.save_inventory(user_id, character_id, data)
+    
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save inventory to database"}), 500

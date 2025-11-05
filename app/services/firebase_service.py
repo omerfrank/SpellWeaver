@@ -218,3 +218,22 @@ class FirebaseService:
         except Exception as e:
             print(f"Error getting player characters: {e}")
             return False
+    def get_inventory(self, player_id, character_id):
+        """Get inventory data for a specific character"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/inventory')
+            inventory = ref.get()
+            return inventory if inventory else {}
+        except Exception as e:
+            print(f"Error getting inventory: {e}")
+            return None
+    
+    def save_inventory(self, player_id, character_id, data):
+        """Save inventory data for a specific character"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/inventory')
+            ref.set(data)
+            return True
+        except Exception as e:
+            print(f"Error saving inventory: {e}")
+            return False
