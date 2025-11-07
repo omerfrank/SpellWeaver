@@ -159,3 +159,94 @@ def save_inventory(character_id):
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "error", "message": "Failed to save inventory to database"}), 500
+
+@game_bp.route('/loadSpells/<character_id>', methods=['GET'])
+@login_required
+def load_spells(character_id):
+    """Load spell data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    spells_data = firebase.get_spells(user_id, character_id)
+    
+    if spells_data is None:
+        return jsonify({"status": "error", "message": "Failed to fetch spells"}), 500
+    
+    return jsonify({"status": "success", "spells": spells_data}), 200
+
+@game_bp.route('/saveSpells/<character_id>', methods=['POST'])
+@login_required
+def save_spells(character_id):
+    """Save spell data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    success = firebase.save_spells(user_id, character_id, data)
+    
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save spells to database"}), 500
+
+@game_bp.route('/deleteSpell/<character_id>/<level>/<index>', methods=['DELETE'])
+@login_required
+def delete_spell(character_id,level,index):
+    """Save spell data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    success = firebase.delete_spell(user_id, character_id, level, int(index))
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save spells to database"}), 500
+    
+@game_bp.route('/addSpell/<character_id>/<level>', methods=['POST'])
+@login_required
+def add_spell(character_id,level):
+    """Save spell data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    success = firebase.add_spell(user_id, character_id, level,data)
+    
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save spells to database"}), 500
+@game_bp.route('/updateSpellSlots/<character_id>/<level>', methods=['POST'])
+@login_required
+def update_spell_slots(character_id,level):
+    """Save spell data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    success = firebase.update_spell_slots(user_id, character_id, level,data)
+    
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save spells to database"}), 500
+@game_bp.route('/updateSpellStats/<character_id>/', methods=['POST'])
+@login_required
+def update_spell_stats(character_id):
+    """Save spell data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    success = firebase.update_spell_stats(user_id, character_id,data)
+    
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save spells to database"}), 500

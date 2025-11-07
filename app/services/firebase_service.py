@@ -26,6 +26,7 @@ class FirebaseService:
         except Exception as e:
             print(f"Error updating player: {e}")
             return False
+            
     def get_player_characters(self, player_id):
         """Get all characters for a specific player"""
         try:
@@ -35,6 +36,7 @@ class FirebaseService:
         except Exception as e:
             print(f"Error getting player characters: {e}")
             return None
+            
     def get_player_character(self,player_id,character_id):
         """GET a specif character via character id"""
         try:
@@ -78,7 +80,7 @@ class FirebaseService:
                     'con': {'score': 10, 'savingThrowProficient': False},
                     'int': {'score': 10, 'savingThrowProficient': False},
                     'wis': {'score': 10, 'savingThrowProficient': False},
-                    'cha': {'score': 10, 'savingThrowProficient': False}  # Fixed typo
+                    'cha': {'score': 10, 'savingThrowProficient': False}
                 },
                 'skills': {
                     'Acrobatics': {'ability': 'dex', 'proficient': False},
@@ -114,18 +116,25 @@ class FirebaseService:
                         'general': []
                     }
                 },
+                # === MODIFIED SPELLS STRUCTURE ===
                 'spells': {
-                    0: {'max': 0, 'remaining': 0, 'spells': []},
-                    1: {'max': 0, 'remaining': 0, 'spells': []},
-                    2: {'max': 0, 'remaining': 0, 'spells': []},
-                    3: {'max': 0, 'remaining': 0, 'spells': []},
-                    4: {'max': 0, 'remaining': 0, 'spells': []},
-                    5: {'max': 0, 'remaining': 0, 'spells': []},
-                    6: {'max': 0, 'remaining': 0, 'spells': []},
-                    7: {'max': 0, 'remaining': 0, 'spells': []},
-                    8: {'max': 0, 'remaining': 0, 'spells': []},
-                    9: {'max': 0, 'remaining': 0, 'spells': []}
+                    'spellDC': 10,
+                    'spellAttack': 0,
+                    'spellcastingAbility': None,
+                    'spellSlots': {
+                        '0': {'max': 0, 'remaining': 0, 'spells': []},
+                        '1': {'max': 0, 'remaining': 0, 'spells': []},
+                        '2': {'max': 0, 'remaining': 0, 'spells': []},
+                        '3': {'max': 0, 'remaining': 0, 'spells': []},
+                        '4': {'max': 0, 'remaining': 0, 'spells': []},
+                        '5': {'max': 0, 'remaining': 0, 'spells': []},
+                        '6': {'max': 0, 'remaining': 0, 'spells': []},
+                        '7': {'max': 0, 'remaining': 0, 'spells': []},
+                        '8': {'max': 0, 'remaining': 0, 'spells': []},
+                        '9': {'max': 0, 'remaining': 0, 'spells': []}
+                    }
                 },
+                # === END MODIFIED SPELLS STRUCTURE ===
                 'combat': {
                     'classAbilities': [],
                     'raceAbilities': []
@@ -164,6 +173,7 @@ class FirebaseService:
                 'success': False,
                 'error': str(e)
             }   
+            
     def get_game_state(self):
         """Get current game state"""
         try:
@@ -182,6 +192,7 @@ class FirebaseService:
         except Exception as e:
             print(f"Error updating game state: {e}")
             return False
+            
     def run_test_query(self):
         """Adds a 'hello world' message to the database under '/test_query'."""
         try:
@@ -200,6 +211,7 @@ class FirebaseService:
         except Exception as e:
             print(f"❌ Error running test query: {e}")
             return {'status': 'error', 'message': str(e)}
+            
     def get_background_info(self,player_id,character_id):
         """GET a specif character via character id"""
         try:
@@ -209,6 +221,7 @@ class FirebaseService:
         except Exception as e:
             print(f"Error getting player characters: {e}")
             return None
+            
     def save_background_info(self,player_id,character_id,data):
         """GET a specif character via character id"""
         try:
@@ -218,6 +231,91 @@ class FirebaseService:
         except Exception as e:
             print(f"Error getting player characters: {e}")
             return False
+
+    # === NEW SPELL FUNCTIONS START ===
+
+    def get_spells(self, player_id, character_id):
+        """Get all spell data for a specific character"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/spells')
+            spells = ref.get()
+            return spells if spells else {}
+        except Exception as e:
+            print(f"Error getting spells: {e}")
+            return None
+
+    def save_spells(self, player_id, character_id, data):
+        """Save the entire spell data object for a specific character"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/spells')
+            ref.set(data)
+            return True
+        except Exception as e:
+            print(f"Error saving spells: {e}")
+            return False
+
+    def update_spell_stats(self, player_id, character_id, data):
+        """Update spell stats (DC, Attack, Ability)"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/spells')
+            # Data should be a dict: {'spellDC': 15, 'spellAttack': 7, 'spellcastingAbility': 'INT'}
+            ref.update(data)
+            return True
+        except Exception as e:
+            print(f"Error updating spell stats: {e}")
+            return False
+
+    def update_spell_slots(self, player_id, character_id, level, data):
+        """Update max and remaining spell slots for a specific level"""
+        try:
+            # Data should be a dict: {'max': 4, 'remaining': 2}
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/spells/spellSlots/{level}')
+            ref.update(data)
+            return True
+        except Exception as e:
+            print(f"Error updating spell slots: {e}")
+            return False
+
+    def add_spell(self, player_id, character_id, level, spell_data):
+        """Add a new spell to a specific level's spell list"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/spells/spellSlots/{level}/spells')
+            
+            # Get current spells to append
+            current_spells = ref.get()
+            if current_spells is None:
+                current_spells = []
+                
+            current_spells.append(spell_data)
+            ref.set(current_spells)
+            return True
+        except Exception as e:
+            print(f"Error adding spell: {e}")
+            return False
+
+    def delete_spell(self, player_id, character_id, level, spell_index):
+        """Delete a spell from a specific level's list by its index"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/spells/spellSlots/{level}/spells')
+            
+            current_spells = ref.get()
+            print(type(spell_index), "\n", type(current_spells))
+            if current_spells is None or not isinstance(current_spells, list) or spell_index >= len(current_spells):
+                print(f"Error deleting spell: Invalid index or no spells found.")
+                return False
+                
+            # Remove spell by index
+            current_spells.pop(spell_index)
+            
+            # Set the modified list back
+            ref.set(current_spells)
+            return True
+        except Exception as e:
+            print(f"Error deleting spell: {e}")
+            return False
+
+    # === NEW SPELL FUNCTIONS END ===
+
     def get_inventory(self, player_id, character_id):
         """Get inventory data for a specific character"""
         try:

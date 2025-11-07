@@ -1,82 +1,15 @@
-// Sample data for testing (Firebase will be added later)
+// Spell data structure
 let spellData = {
-    spellDC: 15,
-    spellAttack: 7,
+    spellDC: 10,
+    spellAttack: 0,
+    spellcastingAbility: null,
     spellSlots: {
-        0: {
-            max: 0,
-            remaining: 0,
-            spells: [
-                {
-                    name: "Fire Bolt",
-                    school: "Evocation",
-                    casting: "1 Action",
-                    range: "120 feet",
-                    description: "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage.",
-                    higherLevel: "This spell's damage increases by 1d10 when you reach 5th level (2d10), 11th level (3d10), and 17th level (4d10)."
-                },
-                {
-                    name: "Mage Hand",
-                    school: "Conjuration",
-                    casting: "1 Action",
-                    range: "30 feet",
-                    description: "A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action.",
-                    higherLevel: ""
-                }
-            ]
-        },
-        1: {
-            max: 4,
-            remaining: 2,
-            spells: [
-                {
-                    name: "Magic Missile",
-                    school: "Evocation",
-                    casting: "1 Action",
-                    range: "120 feet",
-                    description: "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range. A dart deals 1d4 + 1 force damage to its target.",
-                    higherLevel: "When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st."
-                },
-                {
-                    name: "Shield",
-                    school: "Abjuration",
-                    casting: "1 Reaction",
-                    range: "Self",
-                    description: "An invisible barrier of magical force appears and protects you. Until the start of your next turn, you have a +5 bonus to AC.",
-                    higherLevel: ""
-                }
-            ]
-        },
-        2: {
-            max: 3,
-            remaining: 3,
-            spells: [
-                {
-                    name: "Misty Step",
-                    school: "Conjuration",
-                    casting: "1 Bonus Action",
-                    range: "Self",
-                    description: "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space that you can see.",
-                    higherLevel: ""
-                }
-            ]
-        },
-        3: {
-            max: 3,
-            remaining: 1,
-            spells: [
-                {
-                    name: "Fireball",
-                    school: "Evocation",
-                    casting: "1 Action",
-                    range: "150 feet",
-                    description: "A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame. Each creature in a 20-foot-radius sphere centered on that point must make a Dexterity saving throw. A target takes 8d6 fire damage on a failed save, or half as much damage on a successful one.",
-                    higherLevel: "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd."
-                }
-            ]
-        },
-        4: { max: 2, remaining: 2, spells: [] },
-        5: { max: 1, remaining: 0, spells: [] },
+        0: { max: 0, remaining: 0, spells: [] },
+        1: { max: 0, remaining: 0, spells: [] },
+        2: { max: 0, remaining: 0, spells: [] },
+        3: { max: 0, remaining: 0, spells: [] },
+        4: { max: 0, remaining: 0, spells: [] },
+        5: { max: 0, remaining: 0, spells: [] },
         6: { max: 0, remaining: 0, spells: [] },
         7: { max: 0, remaining: 0, spells: [] },
         8: { max: 0, remaining: 0, spells: [] },
@@ -84,24 +17,164 @@ let spellData = {
     }
 };
 
-// Load data (currently uses sample data, will use Firebase later)
-function loadData() {
-    renderUI();
+let currentSpell = null;
+let isLoading = false;
+
+/**
+ * Initialize the page
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    
+    // Set up ability select change handler
+    const abilitySelect = document.getElementById('abilitySelect');
+    if (abilitySelect) {
+        abilitySelect.addEventListener('change', function() {
+            spellData.spellcastingAbility = this.value;
+            saveSpellStats();
+        });
+    }
+});
+
+/**
+ * Load spell data from server
+ */
+async function loadData() {
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) {
+        showError('No character selected');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        const response = await fetch(`/api/game/loadSpells/${characterId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        console.log(result);
+        
+        if (response.ok && result.status === 'success') {
+            if (result.spells) {
+                spellData = result.spells;
+                
+                // Ensure all spell levels exist
+                for (let i = 0; i <= 9; i++) {
+                    if (!spellData.spellSlots[i]) {
+                        spellData.spellSlots[i] = { max: 0, remaining: 0, spells: [] };
+                    }
+                }
+            }
+            renderUI();
+        } else {
+            throw new Error(result.message || 'Failed to load spells');
+        }
+    } catch (error) {
+        console.error('Error loading spells:', error);
+        showError(`Failed to load spells: ${error.message}`);
+        // Still render with default data
+        renderUI();
+    } finally {
+        showLoading(false);
+    }
 }
 
-// Save data (currently logs to console, will use Firebase later)
-function saveData() {
-    console.log('Data saved:', spellData);
+/**
+ * Save complete spell data to server
+ */
+async function saveData() {
+    if (isLoading) return;
+    
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) {
+        console.error('No character selected');
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`/api/game/saveSpells/${characterId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(spellData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            return true;
+        } else {
+            throw new Error(result.message || 'Failed to save spells');
+        }
+    } catch (error) {
+        console.error('Error saving spells:', error);
+        showError(`Failed to save: ${error.message}`);
+        return false;
+    }
 }
 
-// Render the entire UI
+/**
+ * Save spell stats (DC, Attack, Ability)
+ */
+async function saveSpellStats() {
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) return;
+    
+    try {
+        const response = await fetch(`/api/game/updateSpellStats/${characterId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                spellDC: spellData.spellDC,
+                spellAttack: spellData.spellAttack,
+                spellcastingAbility: spellData.spellcastingAbility
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            console.log('Spell stats saved');
+        } else {
+            throw new Error(result.message || 'Failed to save spell stats');
+        }
+    } catch (error) {
+        console.error('Error saving spell stats:', error);
+        showError(`Failed to save spell stats: ${error.message}`);
+    }
+}
+
+/**
+ * Render the entire UI
+ */
 function renderUI() {
     document.getElementById('spellDC').textContent = spellData.spellDC;
-    document.getElementById('spellAttack').textContent = `+${spellData.spellAttack}`;
+    document.getElementById('spellAttack').textContent = spellData.spellAttack >= 0 ? 
+        `+${spellData.spellAttack}` : `${spellData.spellAttack}`;
+    
+    // Set ability dropdown
+    const abilitySelect = document.getElementById('abilitySelect');
+    if (abilitySelect && spellData.spellcastingAbility) {
+        abilitySelect.value = spellData.spellcastingAbility;
+    }
+    
     renderSpellLevels();
 }
 
-// Render spell levels
+/**
+ * Render spell levels
+ */
 function renderSpellLevels() {
     const container = document.getElementById('spellLevelsContainer');
     container.innerHTML = '';
@@ -146,7 +219,9 @@ function renderSpellLevels() {
     }
 }
 
-// Generate slot circles
+/**
+ * Generate slot circles
+ */
 function generateSlotCircles(level, max, remaining) {
     let html = '';
     for (let i = 0; i < max; i++) {
@@ -156,7 +231,9 @@ function generateSlotCircles(level, max, remaining) {
     return html;
 }
 
-// Render spell list
+/**
+ * Render spell list
+ */
 function renderSpellList(level, spells) {
     if (!spells || spells.length === 0) {
         return '<p class="text-muted">No spells at this level</p>';
@@ -178,7 +255,9 @@ function renderSpellList(level, spells) {
     `).join('');
 }
 
-// Global functions
+/**
+ * Open spell modal to add new spell
+ */
 window.openSpellModal = function(level) {
     document.getElementById('spellLevel').value = level;
     document.getElementById('spellId').value = '';
@@ -186,7 +265,11 @@ window.openSpellModal = function(level) {
     document.getElementById('spellModalTitle').textContent = 'Add New Spell';
     new bootstrap.Modal(document.getElementById('spellModal')).show();
 };
-window.saveSpell = function() {
+
+/**
+ * Save spell
+ */
+window.saveSpell = async function() {
     const level = parseInt(document.getElementById('spellLevel').value);
     const spell = {
         name: document.getElementById('spellName').value,
@@ -194,31 +277,65 @@ window.saveSpell = function() {
         casting: document.getElementById('spellCasting').value,
         range: document.getElementById('spellRange').value,
         description: document.getElementById('spellDescription').value,
-        higherLevel: document.getElementById('spellHigherLevel').value
+        higherLevel: document.getElementById('spellHigherLevel').value || ''
     };
 
-    if (!spellData.spellSlots[level].spells) {
-        spellData.spellSlots[level].spells = [];
+    // Validate
+    if (!spell.name || !spell.school || !spell.casting || !spell.range || !spell.description) {
+        showError('Please fill in all required fields');
+        return;
     }
 
-    spellData.spellSlots[level].spells.push(spell);
-    saveData();
-    renderUI();
+    const characterId = localStorage.getItem('selectedCharacterId');
     
-    bootstrap.Modal.getInstance(document.getElementById('spellModal')).hide();
+    if (!characterId) {
+        showError('No character selected');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/game/addSpell/${characterId}/${level}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(spell)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            // Add to local data
+            if (!spellData.spellSlots[level].spells) {
+                spellData.spellSlots[level].spells = [];
+            }
+            spellData.spellSlots[level].spells.push(spell);
+            
+            renderUI();
+            bootstrap.Modal.getInstance(document.getElementById('spellModal')).hide();
+            showSuccess('Spell added successfully');
+        } else {
+            throw new Error(result.message || 'Failed to add spell');
+        }
+    } catch (error) {
+        console.error('Error adding spell:', error);
+        showError(`Failed to add spell: ${error.message}`);
+    }
 };
-let currentSpell = null;
+
+/**
+ * View spell details
+ */
 window.viewSpell = function(level, index) {
     const spell = spellData.spellSlots[level].spells[index];
-    currentSpell = {name:spell.name,range:spell.range};
-    // Populate modal with spell details
+    currentSpell = { name: spell.name, range: spell.range, level: level, index: index };
+    
     document.getElementById('viewSpellName').textContent = spell.name;
     document.getElementById('viewSpellSchool').textContent = spell.school;
     document.getElementById('viewSpellCasting').textContent = spell.casting;
     document.getElementById('viewSpellRange').textContent = spell.range;
     document.getElementById('viewSpellDescription').textContent = spell.description;
     
-    // Show/hide "At Higher Levels" section
     const higherLevelContainer = document.getElementById('viewSpellHigherLevelContainer');
     if (spell.higherLevel && spell.higherLevel.trim() !== '') {
         document.getElementById('viewSpellHigherLevel').textContent = spell.higherLevel;
@@ -226,6 +343,7 @@ window.viewSpell = function(level, index) {
     } else {
         higherLevelContainer.style.display = 'none';
     }
+    
     const school = document.getElementById('viewSpellSchool');
     [
         "school-Abjuration",
@@ -237,53 +355,240 @@ window.viewSpell = function(level, index) {
         "school-Necromancy",
         "school-Transmutation"
     ].forEach(cls => school.classList.remove(cls));
-    // Add the current school class
     school.classList.add(`school-${spell.school}`);
 
-    // Show the modal
     new bootstrap.Modal(document.getElementById('viewSpellModal')).show();
 };
-window.useSpell = function () {
-    alert(currentSpell.name);
-}
-window.deleteSpell = function(level, index) {
-    if (confirm('Are you sure you want to delete this spell?')) {
-        spellData.spellSlots[level].spells.splice(index, 1);
-        saveData();
-        renderUI();
+
+/**
+ * Use spell (you can customize this)
+ */
+window.useSpell = function() {
+    if (currentSpell) {
+        alert(`Using spell: ${currentSpell.name}`);
+        // You can add logic here to consume spell slots if needed
     }
 };
 
-window.updateMaxSlots = function(level, value) {
-    const max = parseInt(value);
-    spellData.spellSlots[level].max = max;
-    spellData.spellSlots[level].remaining = Math.min(spellData.spellSlots[level].remaining, max);
-    saveData();
-    renderUI();
+/**
+ * Delete spell
+ */
+window.deleteSpell = async function(level, index) {
+    if (!confirm('Are you sure you want to delete this spell?')) {
+        return;
+    }
+    
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) {
+        showError('No character selected');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/game/deleteSpell/${characterId}/${level}/${index}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            spellData.spellSlots[level].spells.splice(index, 1);
+            renderUI();
+            showSuccess('Spell deleted successfully');
+        } else {
+            throw new Error(result.message || 'Failed to delete spell');
+        }
+    } catch (error) {
+        console.error('Error deleting spell:', error);
+        showError(`Failed to delete spell: ${error.message}`);
+    }
 };
 
-window.toggleSlot = function(level, index) {
+/**
+ * Update max slots
+ */
+window.updateMaxSlots = async function(level, value) {
+    const max = parseInt(value) || 0;
+    const remaining = Math.min(spellData.spellSlots[level].remaining, max);
+    
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) return;
+    
+    try {
+        const response = await fetch(`/api/game/updateSpellSlots/${characterId}/${level}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                max: max,
+                remaining: remaining
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            spellData.spellSlots[level].max = max;
+            spellData.spellSlots[level].remaining = remaining;
+            renderUI();
+        } else {
+            throw new Error(result.message || 'Failed to update spell slots');
+        }
+    } catch (error) {
+        console.error('Error updating spell slots:', error);
+        showError(`Failed to update spell slots: ${error.message}`);
+    }
+};
+
+/**
+ * Toggle spell slot
+ */
+window.toggleSlot = async function(level, index) {
     const levelData = spellData.spellSlots[level];
+    let newRemaining;
+    
     if (index < levelData.remaining) {
-        levelData.remaining = index;
+        newRemaining = index;
     } else {
-        levelData.remaining = index + 1;
+        newRemaining = index + 1;
     }
-    saveData();
-    renderUI();
+    
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) return;
+    
+    try {
+        const response = await fetch(`/api/game/updateSpellSlots/${characterId}/${level}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                max: levelData.max,
+                remaining: newRemaining
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            spellData.spellSlots[level].remaining = newRemaining;
+            renderUI();
+        } else {
+            throw new Error(result.message || 'Failed to update spell slots');
+        }
+    } catch (error) {
+        console.error('Error toggling spell slot:', error);
+        showError(`Failed to toggle spell slot: ${error.message}`);
+    }
 };
-// Update spell stats
+
+/**
+ * Update spell DC
+ */
 document.getElementById('spellDCInput').addEventListener('change', (e) => {
-    spellData.spellDC = parseInt(e.target.value);
-    saveData();
+    spellData.spellDC = parseInt(e.target.value) || 10;
+    saveSpellStats();
     renderUI();
 });
 
+/**
+ * Update spell attack
+ */
 document.getElementById('spellAttackInput').addEventListener('change', (e) => {
-    spellData.spellAttack = parseInt(e.target.value);
-    saveData();
+    spellData.spellAttack = parseInt(e.target.value) || 0;
+    saveSpellStats();
     renderUI();
 });
 
-// Initialize
-loadData();
+/**
+ * Show loading state
+ */
+function showLoading(show) {
+    if (show) {
+        if (!document.getElementById('spellsLoadingOverlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'spellsLoadingOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(44, 47, 51, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p style="color: #ffffff; margin-top: 20px;">Loading spells...</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+    } else {
+        const overlay = document.getElementById('spellsLoadingOverlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+    const container = document.querySelector('.container.mt-4');
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.role = 'alert';
+    errorDiv.innerHTML = `
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    if (container) {
+        container.insertBefore(errorDiv, container.firstChild);
+    }
+    
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+/**
+ * Show success message
+ */
+function showSuccess(message) {
+    const container = document.querySelector('.container.mt-4');
+    
+    const successDiv = document.createElement('div');
+    successDiv.className = 'alert alert-success alert-dismissible fade show';
+    successDiv.role = 'alert';
+    successDiv.innerHTML = `
+        <i class="bi bi-check-circle-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    if (container) {
+        container.insertBefore(successDiv, container.firstChild);
+    }
+    
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
+}
