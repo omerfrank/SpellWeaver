@@ -52,6 +52,7 @@ function displayCharacters(characters) {
     grid.appendChild(createCol);
 }
 
+
 // Create character card HTML
 function createCharacterCard(character) {
     // Handle Firebase data structure - use the pushed key as ID if characterId not set
@@ -68,6 +69,9 @@ function createCharacterCard(character) {
 
     return `
         <div class="character-card" onclick="selectCharacter('${charId}')">
+            <button class="character-card-delete-btn" onclick="event.stopPropagation(); deleteCharacter('${charId}', '${charName}')" title="Delete Character">
+                <i class="fas fa-trash"></i>
+            </button>
             <img class="character-avatar" src="${charImg}" alt="${charName}">
             <div class="character-name">${charName}</div>
             <div class="character-info">
@@ -90,7 +94,49 @@ function createCharacterCard(character) {
         </div>
     `;
 }
+async function deleteCharacter(characterId, characterName) {
+    
+    // 1. Confirm with the user before doing anything
+    if (!confirm(`Are you sure you want to delete "${characterName}"? This action cannot be undone.`)) {
+        return; // Stop if the user clicks "Cancel"
+    }
 
+    // 2. Show the loading spinner
+    showLoading(true);
+
+    try {
+        // 3. Call the backend API using the DELETE method
+        const response = await fetch(`/api/game/deleteCharacter/${characterId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        // 4. Check if the server responded successfully
+        if (response.ok && result.status === 'success') {
+            console.log(result.message); // Log success message
+            
+            // 5. Reload the character list to remove the deleted card.
+            //    loadCharacters() will also call showLoading(false) for us when it's done.
+            loadCharacters();
+            
+        } else {
+            // 6. Handle errors reported by the server (e.g., "not logged in", "failed to delete")
+            throw new Error(result.message || 'An unknown error occurred.');
+        }
+
+    } catch (error) {
+        // 7. Handle network errors (e.g., fetch failed) or errors thrown above
+        console.error('Error deleting character:', error);
+        alert(`Error: ${error.message}`);
+        
+        // 8. Make sure to hide the loading spinner if an error occurs
+        showLoading(false);
+    }
+}
 // Create "New Character" card HTML
 function createNewCharacterCard() {
     return `

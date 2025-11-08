@@ -126,3 +126,29 @@
     height: 3rem;
     border-width: 0.3rem;
 }
+.character-card-delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ed4245;
+    border: none;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s, background-color 0.3s;
+    z-index: 10;
+}
+
+.character-card:hover .character-card-delete-btn {
+    opacity: 1;
+}
+
+.character-card-delete-btn:hover {
+    background-color: #c03537;
+}

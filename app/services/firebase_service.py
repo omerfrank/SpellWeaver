@@ -354,3 +354,13 @@ class FirebaseService:
         except Exception as e:
             print(f"Error saving combat data: {e}")
             return False
+    def delete_character(self, player_id, character_id):
+        """Delete a character from Firebase"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}')
+            ref.delete()
+            print(f"✅ Character {character_id} deleted successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Error deleting character: {e}")
+            return False

@@ -280,3 +280,20 @@ def save_combat(character_id):
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "error", "message": "Failed to save combat data to database"}), 500
+@game_bp.route('/deleteCharacter/<character_id>', methods=['DELETE'])
+@login_required
+def delete_character(character_id):
+    """Delete a character for the logged-in user"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    if not character_id:
+        return jsonify({"status": "error", "message": "Character ID is required"}), 400
+    
+    success = firebase.delete_character(user_id, character_id)
+    
+    if success:
+        return jsonify({"status": "success", "message": "Character deleted successfully"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to delete character"}), 500
