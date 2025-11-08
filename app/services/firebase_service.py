@@ -335,3 +335,22 @@ class FirebaseService:
         except Exception as e:
             print(f"Error saving inventory: {e}")
             return False
+    def get_combat(self, player_id, character_id):
+        """Get combat data for a specific character"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/combat')
+            combat = ref.get()
+            return combat if combat else {}
+        except Exception as e:
+            print(f"Error getting combat data: {e}")
+            return None
+
+    def save_combat(self, player_id, character_id, data):
+        """Save combat data for a specific character"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}/combat')
+            ref.set(data)
+            return True
+        except Exception as e:
+            print(f"Error saving combat data: {e}")
+            return False

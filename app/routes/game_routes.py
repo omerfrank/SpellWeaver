@@ -250,3 +250,33 @@ def update_spell_stats(character_id):
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "error", "message": "Failed to save spells to database"}), 500
+@game_bp.route('/loadCombat/<character_id>', methods=['GET'])
+@login_required
+def load_combat(character_id):
+    """Load combat data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    combat_data = firebase.get_combat(user_id, character_id)
+    
+    if combat_data is None:
+        return jsonify({"status": "error", "message": "Failed to fetch combat data"}), 500
+    
+    return jsonify({"status": "success", "combat": combat_data}), 200
+
+@game_bp.route('/saveCombat/<character_id>', methods=['POST'])
+@login_required
+def save_combat(character_id):
+    """Save combat data for a specific character"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    success = firebase.save_combat(user_id, character_id, data)
+    
+    if success:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to save combat data to database"}), 500

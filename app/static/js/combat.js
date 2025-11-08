@@ -1,6 +1,8 @@
-let currentAbilityType = '';
-let editingAbilityIndex = null;
-let editingAbilityType = null;
+// Combat data structure
+let combatData = {
+    classAbilities: [],
+    racialAbilities: []
+};
 
 const genericActions = [
     { name: 'Attack', cost: 'Action', description: 'Make a melee or ranged attack against a target' },
@@ -11,65 +13,129 @@ const genericActions = [
     { name: 'Hide', cost: 'Action', description: 'Make a Stealth check to hide from enemies' }
 ];
 
-const classAbilities = [
-    {
-        type: 'active',
-        name: 'Second Wind',
-        summary: 'Regain hit points equal to 1d10 + fighter level',
-        description: 'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again.',
-        range: 'Self',
-        actionCost: 'Bonus Action',
-        maxUses: 1,
-        usesLeft: 1
-    },
-    {
-        type: 'active',
-        name: 'Action Surge',
-        summary: 'Take an additional action on your turn',
-        description: 'You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action. Once you use this feature, you must finish a short or long rest before you can use it again.',
-        range: 'Self',
-        actionCost: 'Free Action',
-        maxUses: 1,
-        usesLeft: 0
-    },
-    {
-        type: 'passive',
-        name: 'Fighting Style: Dueling',
-        summary: 'Gain +2 to damage rolls with one-handed weapons',
-        description: 'When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.'
-    },
-    {
-        type: 'passive',
-        name: 'Extra Attack',
-        summary: 'Attack twice whenever you take the Attack action',
-        description: 'You can attack twice, instead of once, whenever you take the Attack action on your turn. The number of attacks increases to three when you reach 11th level in this class and to four when you reach 20th level in this class.'
-    }
-];
+let currentAbilityType = '';
+let editingAbilityIndex = null;
+let editingAbilityType = null;
+let isLoading = false;
 
-const racialAbilities = [
-    {
-        type: 'active',
-        name: 'Breath Weapon',
-        summary: 'Exhale destructive energy in a 15-foot cone',
-        description: 'You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a Dexterity saving throw. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one.',
-        range: '15 feet',
-        actionCost: 'Action',
-        maxUses: 3,
-        usesLeft: 2
-    },
-    {
-        type: 'passive',
-        name: 'Darkvision',
-        summary: 'See in dim light within 60 feet as if it were bright light',
-        description: 'Thanks to your draconic heritage, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can\'t discern color in darkness, only shades of gray.'
-    },
-    {
-        type: 'passive',
-        name: 'Draconic Resistance',
-        summary: 'Resistance to your draconic ancestry damage type',
-        description: 'You have resistance to the damage type associated with your draconic ancestry (acid, cold, fire, lightning, or poison).'
+/**
+ * Initialize the page
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    loadCombatData();
+    renderGenericActions();
+    
+    // Set up edit ability button
+    document.getElementById('editAbilityBtn').addEventListener('click', function() {
+        if (editingAbilityIndex !== null && editingAbilityType !== null) {
+            const abilities = editingAbilityType === 'class' ? combatData.classAbilities : combatData.racialAbilities;
+            const ability = abilities[editingAbilityIndex];
+            
+            document.getElementById('abilityTypeSelect').value = ability.type;
+            document.getElementById('abilityName').value = ability.name;
+            document.getElementById('abilitySummary').value = ability.summary || ability.description;
+            document.getElementById('abilityFullDescription').value = ability.description;
+            
+            if (ability.type === 'active') {
+                document.getElementById('abilityRange').value = ability.range;
+                document.getElementById('abilityAction').value = ability.actionCost;
+                document.getElementById('abilityMaxUses').value = ability.maxUses;
+                document.getElementById('activeFields').style.display = 'block';
+            }
+            
+            currentAbilityType = editingAbilityType;
+            
+            document.getElementById('addAbilityModalLabel').textContent = 'Edit Ability';
+            document.querySelector('#addAbilityModal .btn-add').textContent = 'Save Changes';
+            document.querySelector('#addAbilityModal .btn-add').onclick = function() {
+                updateAbility(editingAbilityIndex, editingAbilityType);
+            };
+            
+            bootstrap.Modal.getInstance(document.getElementById('abilityDetailsModal')).hide();
+            
+            const addModal = new bootstrap.Modal(document.getElementById('addAbilityModal'));
+            addModal.show();
+        }
+    });
+});
+
+/**
+ * Load combat data from server
+ */
+async function loadCombatData() {
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) {
+        showError('No character selected');
+        return;
     }
-];
+    
+    showLoading(true);
+    
+    try {
+        const response = await fetch(`/api/game/loadCombat/${characterId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            if (result.combat) {
+                combatData.classAbilities = result.combat.classAbilities || [];
+                combatData.racialAbilities = result.combat.racialAbilities || [];
+            }
+            renderAbilities();
+        } else {
+            throw new Error(result.message || 'Failed to load combat data');
+        }
+    } catch (error) {
+        console.error('Error loading combat data:', error);
+        showError(`Failed to load combat data: ${error.message}`);
+        // Still render with empty data
+        renderAbilities();
+    } finally {
+        showLoading(false);
+    }
+}
+
+/**
+ * Save combat data to server
+ */
+async function saveCombatData() {
+    if (isLoading) return false;
+    
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId) {
+        console.error('No character selected');
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`/api/game/saveCombat/${characterId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(combatData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            return true;
+        } else {
+            throw new Error(result.message || 'Failed to save combat data');
+        }
+    } catch (error) {
+        console.error('Error saving combat data:', error);
+        showError(`Failed to save: ${error.message}`);
+        return false;
+    }
+}
 
 function setAbilityType(type) {
     currentAbilityType = type;
@@ -88,18 +154,23 @@ function getActionBadgeClass(action) {
     return 'badge-free';
 }
 
-function resetAbilityUses(abilityType) {
-    const abilities = abilityType === 'class' ? classAbilities : racialAbilities;
+async function resetAbilityUses(abilityType) {
+    const abilities = abilityType === 'class' ? combatData.classAbilities : combatData.racialAbilities;
     abilities.forEach(ability => {
         if (ability.type === 'active') {
             ability.usesLeft = ability.maxUses;
         }
     });
-    renderAbilities();
+    
+    const success = await saveCombatData();
+    if (success) {
+        renderAbilities();
+        showSuccess('Ability uses reset');
+    }
 }
 
-function deleteAbilityByIndex(index, abilityType) {
-    const abilities = abilityType === 'class' ? classAbilities : racialAbilities;
+async function deleteAbilityByIndex(index, abilityType) {
+    const abilities = abilityType === 'class' ? combatData.classAbilities : combatData.racialAbilities;
     const abilityName = abilities[index].name;
     
     if (!confirm(`Are you sure you want to delete "${abilityName}"?`)) {
@@ -107,11 +178,16 @@ function deleteAbilityByIndex(index, abilityType) {
     }
     
     abilities.splice(index, 1);
-    renderAbilities();
+    
+    const success = await saveCombatData();
+    if (success) {
+        renderAbilities();
+        showSuccess('Ability deleted');
+    }
 }
 
 function showAbilityDetails(index, abilityType) {
-    const abilities = abilityType === 'class' ? classAbilities : racialAbilities;
+    const abilities = abilityType === 'class' ? combatData.classAbilities : combatData.racialAbilities;
     const ability = abilities[index];
     
     let detailsHTML = `
@@ -148,52 +224,15 @@ function showAbilityDetails(index, abilityType) {
     detailsModal.show();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('editAbilityBtn').addEventListener('click', function() {
-        if (editingAbilityIndex !== null && editingAbilityType !== null) {
-            const abilities = editingAbilityType === 'class' ? classAbilities : racialAbilities;
-            const ability = abilities[editingAbilityIndex];
-            
-            document.getElementById('abilityTypeSelect').value = ability.type;
-            document.getElementById('abilityName').value = ability.name;
-            document.getElementById('abilitySummary').value = ability.summary || ability.description;
-            document.getElementById('abilityFullDescription').value = ability.description;
-            
-            if (ability.type === 'active') {
-                document.getElementById('abilityRange').value = ability.range;
-                document.getElementById('abilityAction').value = ability.actionCost;
-                document.getElementById('abilityMaxUses').value = ability.maxUses;
-                document.getElementById('activeFields').style.display = 'block';
-            }
-            
-            currentAbilityType = editingAbilityType;
-            
-            document.getElementById('addAbilityModalLabel').textContent = 'Edit Ability';
-            document.querySelector('#addAbilityModal .btn-add').textContent = 'Save Changes';
-            document.querySelector('#addAbilityModal .btn-add').onclick = function() {
-                updateAbility(editingAbilityIndex, editingAbilityType);
-            };
-            
-            bootstrap.Modal.getInstance(document.getElementById('abilityDetailsModal')).hide();
-            
-            const addModal = new bootstrap.Modal(document.getElementById('addAbilityModal'));
-            addModal.show();
-        }
-    });
-
-    renderGenericActions();
-    renderAbilities();
-});
-
-function updateAbility(index, abilityType) {
-    const abilities = abilityType === 'class' ? classAbilities : racialAbilities;
+async function updateAbility(index, abilityType) {
+    const abilities = abilityType === 'class' ? combatData.classAbilities : combatData.racialAbilities;
     const type = document.getElementById('abilityTypeSelect').value;
     const name = document.getElementById('abilityName').value;
     const summary = document.getElementById('abilitySummary').value;
     const description = document.getElementById('abilityFullDescription').value;
 
     if (!name || !summary || !description) {
-        alert('Please fill in all required fields');
+        showError('Please fill in all required fields');
         return;
     }
 
@@ -212,19 +251,25 @@ function updateAbility(index, abilityType) {
     }
 
     abilities[index] = updatedAbility;
-    renderAbilities();
     
-    document.getElementById('addAbilityForm').reset();
-    document.getElementById('activeFields').style.display = 'none';
-    document.getElementById('addAbilityModalLabel').textContent = 'Add New Ability';
-    document.querySelector('#addAbilityModal .btn-add').textContent = 'Add Ability';
-    document.querySelector('#addAbilityModal .btn-add').onclick = addAbility;
-    
-    editingAbilityIndex = null;
-    editingAbilityType = null;
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addAbilityModal'));
-    modal.hide();
+    const success = await saveCombatData();
+    if (success) {
+        renderAbilities();
+        
+        document.getElementById('addAbilityForm').reset();
+        document.getElementById('activeFields').style.display = 'none';
+        document.getElementById('addAbilityModalLabel').textContent = 'Add New Ability';
+        document.querySelector('#addAbilityModal .btn-add').textContent = 'Add Ability';
+        document.querySelector('#addAbilityModal .btn-add').onclick = addAbility;
+        
+        editingAbilityIndex = null;
+        editingAbilityType = null;
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addAbilityModal'));
+        modal.hide();
+        
+        showSuccess('Ability updated');
+    }
 }
 
 function renderGenericActions() {
@@ -301,29 +346,44 @@ function renderAbility(ability, abilityType, index) {
 }
 
 function renderAbilities() {
-    document.getElementById('classAbilitiesContainer').innerHTML = 
-        classAbilities.map((ability, index) => renderAbility(ability, 'class', index)).join('');
-    document.getElementById('racialAbilitiesContainer').innerHTML = 
-        racialAbilities.map((ability, index) => renderAbility(ability, 'racial', index)).join('');
-}
-
-function useAbility(index, abilityType) {
-    const abilities = abilityType === 'class' ? classAbilities : racialAbilities;
-    const ability = abilities[index];
-    if (ability && ability.usesLeft > 0) {
-        ability.usesLeft--;
-        renderAbilities();
+    const classContainer = document.getElementById('classAbilitiesContainer');
+    const racialContainer = document.getElementById('racialAbilitiesContainer');
+    
+    if (combatData.classAbilities.length === 0) {
+        classContainer.innerHTML = '<p class="text-muted">No class abilities yet. Click "Add Ability" to create one.</p>';
+    } else {
+        classContainer.innerHTML = combatData.classAbilities.map((ability, index) => renderAbility(ability, 'class', index)).join('');
+    }
+    
+    if (combatData.racialAbilities.length === 0) {
+        racialContainer.innerHTML = '<p class="text-muted">No racial abilities yet. Click "Add Ability" to create one.</p>';
+    } else {
+        racialContainer.innerHTML = combatData.racialAbilities.map((ability, index) => renderAbility(ability, 'racial', index)).join('');
     }
 }
 
-function addAbility() {
+async function useAbility(index, abilityType) {
+    const abilities = abilityType === 'class' ? combatData.classAbilities : combatData.racialAbilities;
+    const ability = abilities[index];
+    
+    if (ability && ability.usesLeft > 0) {
+        ability.usesLeft--;
+        
+        const success = await saveCombatData();
+        if (success) {
+            renderAbilities();
+        }
+    }
+}
+
+async function addAbility() {
     const type = document.getElementById('abilityTypeSelect').value;
     const name = document.getElementById('abilityName').value;
     const summary = document.getElementById('abilitySummary').value;
     const description = document.getElementById('abilityFullDescription').value;
 
     if (!name || !summary || !description) {
-        alert('Please fill in all required fields');
+        showError('Please fill in all required fields');
         return;
     }
 
@@ -342,16 +402,107 @@ function addAbility() {
     }
 
     if (currentAbilityType === 'class') {
-        classAbilities.push(newAbility);
+        combatData.classAbilities.push(newAbility);
     } else {
-        racialAbilities.push(newAbility);
+        combatData.racialAbilities.push(newAbility);
     }
 
-    renderAbilities();
+    const success = await saveCombatData();
+    if (success) {
+        renderAbilities();
+        
+        document.getElementById('addAbilityForm').reset();
+        document.getElementById('activeFields').style.display = 'none';
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addAbilityModal'));
+        modal.hide();
+        
+        showSuccess('Ability added');
+    }
+}
+
+/**
+ * Show loading state
+ */
+function showLoading(show) {
+    if (show) {
+        if (!document.getElementById('combatLoadingOverlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'combatLoadingOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(44, 47, 51, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            `;
+            overlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p style="color: #ffffff; margin-top: 20px;">Loading combat data...</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+    } else {
+        const overlay = document.getElementById('combatLoadingOverlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+}
+
+/**
+ * Show error message
+ */
+function showError(message) {
+    const container = document.querySelector('.container.mt-4');
     
-    document.getElementById('addAbilityForm').reset();
-    document.getElementById('activeFields').style.display = 'none';
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.role = 'alert';
+    errorDiv.innerHTML = `
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
     
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addAbilityModal'));
-    modal.hide();
+    if (container) {
+        container.insertBefore(errorDiv, container.firstChild);
+    }
+    
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+/**
+ * Show success message
+ */
+function showSuccess(message) {
+    const container = document.querySelector('.container.mt-4');
+    
+    const successDiv = document.createElement('div');
+    successDiv.className = 'alert alert-success alert-dismissible fade show';
+    successDiv.role = 'alert';
+    successDiv.innerHTML = `
+        <i class="bi bi-check-circle-fill me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    if (container) {
+        container.insertBefore(successDiv, container.firstChild);
+    }
+    
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
 }
