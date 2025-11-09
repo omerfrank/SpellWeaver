@@ -415,7 +415,7 @@ class FirebaseService:
             print(f"Error getting campaign: {e}")
             return None
 
-    def create_campaign(self, dm_id, campaign_name, description=""):
+    def create_campaign(self, dm_id, campaign_name,image_url, description=""):
         """Create a new campaign using Campaign model"""
         try:
             ref = db.reference(f'users/{dm_id}/dm/campaigns')
@@ -429,7 +429,8 @@ class FirebaseService:
                 campaign_id=campaign_id,
                 dm_id=dm_id,
                 name=campaign_name,
-                description=description
+                description=description,
+                image_url=image_url
             )
             
             # Save to Firebase

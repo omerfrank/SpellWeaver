@@ -160,17 +160,18 @@ class Campaign:
     Represents a DM's campaign.
     """
     
-    def __init__(self, campaign_id: str, dm_id: str, name: str, description: str = ""):
+    def __init__(self, campaign_id: str, dm_id: str, name: str, description: str = "", image_url: str = ""):
         self.campaign_id = campaign_id
         self.dm_id = dm_id
         self.name = name
         self.description = description
+        self.image_url = image_url
         self.status = 'active'
         self.player_count = 0
         self.created_at = datetime.datetime.utcnow().isoformat()
         self.last_played = None
         self.settings = {
-            'gridSize': {'rows': 10, 'cols': 10},
+            'gridSize': {'rows': 10, 'cols': 8},
             'defaultSpeed': 30
         }
     
@@ -180,6 +181,7 @@ class Campaign:
             'campaignId': self.campaign_id,
             'name': self.name,
             'description': self.description,
+            'imageUrl': self.image_url,
             'status': self.status,
             'playerCount': self.player_count,
             'createdAt': self.created_at,
@@ -194,7 +196,8 @@ class Campaign:
             campaign_id=campaign_id,
             dm_id=data.get('dm_id', ''),
             name=data.get('name', 'Unnamed Campaign'),
-            description=data.get('description', '')
+            description=data.get('description', ''),
+            image_url=data.get('imageUrl', '')
         )
         
         campaign.status = data.get('status', 'active')

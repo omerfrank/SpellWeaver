@@ -9,7 +9,7 @@ firebase = FirebaseService()
 
 # ===== PAGE ROUTES =====
 
-@dm_bp.route('/')
+@dm_bp.route('/campaignSelect')
 @login_required
 def load_campaign_select():
     """Load the campaign selection page"""
@@ -64,6 +64,45 @@ def get_campaign(campaign_id):
         return jsonify({"status": "error", "message": "Campaign not found"}), 404
     
     return jsonify({"status": "success", "campaign": campaign}), 200
+
+@dm_bp.route('/api/campaign/create', methods=['POST'])
+@login_required
+def create_campaign():
+    """Create a new campaign"""
+    dm_id = session.get('user_id')
+    if not dm_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    try:
+        data = request.get_json()
+        campaign_name = data.get('name')
+        description = data.get('description', '')
+        image_url = data.get('imageUrl', '')
+        settings = data.get('settings', {})
+        
+        if not campaign_name or not campaign_name.strip():
+            return jsonify({"status": "error", "message": "Campaign name is required"}), 400
+        
+        # Create the campaign
+        campaign_id = firebase.create_campaign(
+            dm_id=dm_id,
+            campaign_name=campaign_name,
+            description=description,
+            image_url=image_url,
+        )
+        
+        if campaign_id:
+            return jsonify({
+                'status': 'success',
+                'message': 'Campaign created successfully',
+                'campaign_id': campaign_id
+            }), 201
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to create campaign'}), 500
+    
+    except Exception as e:
+        print(f"Error in create_campaign route: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @dm_bp.route('/api/campaign/<campaign_id>', methods=['DELETE'])
 @login_required

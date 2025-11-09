@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Campaign - Quest Weaver</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/createCampaign.css">
+    <link rel="icon" type="image/webp" href="/static/icons/Quest_Weaver_Icon.webp">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="/static/icons/Quest_Weaver_Icon.webp" class="navbar-logo" alt="Quest Weaver Logo">
+                    <strong>Quest Weaver - DM</strong>
+                </div>
+                <button class="btn btn-outline-light btn-sm" onclick="goBack()">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="fas fa-scroll me-3"></i>Create New Campaign</h1>
+            <p class="text-muted">Set up your adventure and begin your journey</p>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="container py-4">
+        <div class="form-container">
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <div class="preview-icon" id="previewIcon">
+                    <i class="fas fa-scroll"></i>
+                </div>
+                <div class="preview-name" id="previewName">New Campaign</div>
+                <div class="preview-description" id="previewDescription">Your adventure awaits...</div>
+            </div>
+
+            <!-- Campaign Form -->
+            <form id="campaignForm">
+                <!-- Campaign Name -->
+                <div class="mb-4">
+                    <label for="campaignName" class="form-label">Campaign Name *</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="campaignName" 
+                        placeholder="e.g., The Lost Mines of Phandelver"
+                        maxlength="100"
+                        oninput="updatePreview()"
+                        required
+                    >
+                    <small class="text-muted">Maximum 100 characters</small>
+                </div>
+
+                <!-- Campaign Description -->
+                <div class="mb-4">
+                    <label for="campaignDescription" class="form-label">Description</label>
+                    <textarea 
+                        class="form-control" 
+                        id="campaignDescription" 
+                        rows="4"
+                        placeholder="Describe your campaign's story, setting, and themes..."
+                        maxlength="500"
+                        oninput="updatePreview()"
+                    ></textarea>
+                    <small class="text-muted">Maximum 500 characters (<span id="charCount">0</span>/500)</small>
+                </div>
+
+                <!-- Image URL -->
+                <div class="mb-4">
+                    <label for="campaignImageUrl" class="form-label">Campaign Image URL (Optional)</label>
+                    <input 
+                        type="url" 
+                        class="form-control" 
+                        id="campaignImageUrl" 
+                        placeholder="https://example.com/image.jpg"
+                        oninput="updatePreview()"
+                    >
+                    <small class="text-muted">Provide a URL to an image for your campaign card</small>
+                </div>
+
+                <!-- Image Preview -->
+                <div class="mb-4" id="imagePreviewContainer" style="display: none;">
+                    <label class="form-label">Image Preview</label>
+                    <div class="image-preview-box">
+                        <img id="imagePreview" src="" alt="Campaign image preview" onerror="handleImageError()">
+                    </div>
+                </div>
+
+                <!-- Advanced Settings (Collapsed) -->
+                <div class="mb-4">
+                    <button 
+                        class="btn btn-link text-decoration-none p-0" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#advancedSettings"
+                        aria-expanded="false"
+                    >
+                        <i class="fas fa-chevron-right me-2" id="advancedChevron"></i>
+                        Advanced Settings (Optional)
+                    </button>
+                    
+                    <div class="collapse mt-3" id="advancedSettings">
+                        <div class="advanced-settings-box">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="gridRows" class="form-label">Grid Rows</label>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="gridRows" 
+                                        value="10"
+                                        min="5"
+                                        max="30"
+                                    >
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="gridCols" class="form-label">Grid Columns</label>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="gridCols" 
+                                        value="10"
+                                        min="5"
+                                        max="30"
+                                    >
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="defaultSpeed" class="form-label">Default Speed (ft)</label>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="defaultSpeed" 
+                                        value="30"
+                                        min="10"
+                                        max="120"
+                                        step="5"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <button type="button" class="btn btn-cancel" onclick="goBack()">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-create" id="createBtn">
+                        <i class="fas fa-plus-circle me-2"></i>Create Campaign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Update preview as user types
+        function updatePreview() {
+            const name = document.getElementById('campaignName').value.trim();
+            const description = document.getElementById('campaignDescription').value.trim();
+            const imageUrl = document.getElementById('campaignImageUrl').value.trim();
+            
+            // Update name
+            document.getElementById('previewName').textContent = name || 'New Campaign';
+            
+            // Update description
+            document.getElementById('previewDescription').textContent = description || 'Your adventure awaits...';
+            
+            // Update character count
+            document.getElementById('charCount').textContent = description.length;
+            
+            // Update image preview
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+            
+            if (imageUrl) {
+                previewImg.src = imageUrl;
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        // Handle image load error
+        function handleImageError() {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+            previewImg.src = '';
+            previewContainer.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Unable to load image from the provided URL
+                </div>
+            `;
+        }
+
+        // Toggle chevron on collapse
+        document.getElementById('advancedSettings').addEventListener('show.bs.collapse', function () {
+            document.getElementById('advancedChevron').classList.remove('fa-chevron-right');
+            document.getElementById('advancedChevron').classList.add('fa-chevron-down');
+        });
+        
+        document.getElementById('advancedSettings').addEventListener('hide.bs.collapse', function () {
+            document.getElementById('advancedChevron').classList.remove('fa-chevron-down');
+            document.getElementById('advancedChevron').classList.add('fa-chevron-right');
+        });
+
+        // Handle form submission
+        document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await createCampaign();
+        });
+
+        // Create campaign
+        async function createCampaign() {
+            const name = document.getElementById('campaignName').value.trim();
+            const description = document.getElementById('campaignDescription').value.trim();
+            const imageUrl = document.getElementById('campaignImageUrl').value.trim();
+            
+            if (!name) {
+                showAlert('Campaign name is required', 'danger');
+                return;
+            }
+
+            const createBtn = document.getElementById('createBtn');
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+
+            // Get advanced settings
+            const gridRows = parseInt(document.getElementById('gridRows').value) || 10;
+            const gridCols = parseInt(document.getElementById('gridCols').value) || 10;
+            const defaultSpeed = parseInt(document.getElementById('defaultSpeed').value) || 30;
+
+            // Create campaign object
+            const campaignData = {
+                name: name,
+                description: description,
+                imageUrl: imageUrl,
+                settings: {
+                    gridSize: {
+                        rows: gridRows,
+                        cols: gridCols
+                    },
+                    defaultSpeed: defaultSpeed
+                }
+            };
+
+            try {
+                const response = await fetch('/dm/api/campaign/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(campaignData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    console.log('Campaign created successfully:', result);
+                    showAlert('Campaign created successfully!', 'success');
+                    
+                    // Redirect to campaign select after 1.5 seconds
+                    setTimeout(() => {
+                        window.location.href = '/dm/campaignSelect';
+                    }, 1500);
+                } else {
+                    throw new Error(result.message || 'Failed to create campaign');
+                }
+                
+            } catch (error) {
+                console.error('Error creating campaign:', error);
+                showAlert(`Failed to create campaign: ${error.message}`, 'danger');
+                
+                createBtn.disabled = false;
+                createBtn.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Create Campaign';
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Go back to campaign select
+        function goBack() {
+            if (confirm('Are you sure? Any unsaved changes will be lost.')) {
+                window.location.href = '/dm/campaignSelect';
+            }
+        }
+    </script>
+</body>
+</html>

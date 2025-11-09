@@ -32,7 +32,7 @@
     <div class="page-header">
         <div class="container">
             <h1><i class="fas fa-dungeon me-3"></i>Select Your Campaign</h1>
-            <p class="">Choose a campaign to start your session</p>
+            <p class="text-muted">Choose a campaign to start your session</p>
         </div>
     </div>
 
@@ -41,7 +41,7 @@
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-3 ">Loading campaigns...</p>
+        <p class="mt-3 text-muted">Loading campaigns...</p>
     </div>
 
     <!-- Campaigns Container -->
@@ -112,6 +112,7 @@
             const campaignId = campaign.campaignId || 'unknown';
             const campaignName = campaign.name || 'Unnamed Campaign';
             const description = campaign.description || 'No description';
+            const imageUrl = campaign.imageUrl || '';
             const playerCount = campaign.playerCount || 0;
             const lastPlayed = campaign.lastPlayed ? formatDate(campaign.lastPlayed) : 'Never';
             const status = campaign.status || 'active';
@@ -120,14 +121,22 @@
                 ? '<span class="badge bg-success">Active</span>' 
                 : '<span class="badge bg-secondary">Archived</span>';
 
+            // Use custom image or default icon
+            const campaignVisual = imageUrl 
+                ? `<img src="${imageUrl}" alt="${campaignName}" class="campaign-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                   <div class="campaign-icon" style="display: none;">
+                       <i class="fas fa-scroll"></i>
+                   </div>`
+                : `<div class="campaign-icon">
+                       <i class="fas fa-scroll"></i>
+                   </div>`;
+
             return `
                 <div class="campaign-card" onclick="selectCampaign('${campaignId}')">
                     <button class="campaign-card-delete-btn" onclick="event.stopPropagation(); deleteCampaign('${campaignId}', '${campaignName}')" title="Delete Campaign">
                         <i class="fas fa-trash"></i>
                     </button>
-                    <div class="campaign-icon">
-                        <i class="fas fa-scroll"></i>
-                    </div>
+                    ${campaignVisual}
                     <div class="campaign-name">${campaignName}</div>
                     <div class="campaign-description">${description}</div>
                     <div class="campaign-stats">
@@ -156,7 +165,7 @@
                         <i class="fas fa-plus-circle"></i>
                     </div>
                     <h4>Create New Campaign</h4>
-                    <p class="">Start a new adventure</p>
+                    <p class="text-muted">Start a new adventure</p>
                 </div>
             `;
         }
