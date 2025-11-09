@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Campaign - Quest Weaver</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/campaignSelect.css">
+    <link rel="icon" type="image/webp" href="/static/icons/Quest_Weaver_Icon.webp">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="/static/icons/Quest_Weaver_Icon.webp" class="navbar-logo" alt="Quest Weaver Logo">
+                    <strong>Quest Weaver - DM</strong>
+                </div>
+                <div>
+                    <button class="btn btn-logout btn-sm" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="fas fa-dungeon me-3"></i>Select Your Campaign</h1>
+            <p class="">Choose a campaign to start your session</p>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingContainer" class="loading-container" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 ">Loading campaigns...</p>
+    </div>
+
+    <!-- Campaigns Container -->
+    <div id="campaignsContainer" class="container py-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center" id="campaignGrid">
+            <!-- Campaigns will be loaded here dynamically -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCampaigns();
+        });
+
+        // Load campaigns from Flask API
+        async function loadCampaigns() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/dm/api/campaigns', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    const campaigns = result.campaigns || [];
+                    displayCampaigns(campaigns);
+                } else {
+                    throw new Error(result.message || 'Failed to load campaigns');
+                }
+                
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+                showError('Failed to load campaigns. Please try again.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Display campaigns on the page
+        function displayCampaigns(campaigns) {
+            const grid = document.getElementById('campaignGrid');
+            grid.innerHTML = '';
+
+            // Add each campaign card
+            campaigns.forEach(campaign => {
+                const col = document.createElement('div');
+                col.className = 'col';
+                col.innerHTML = createCampaignCard(campaign);
+                grid.appendChild(col);
+            });
+
+            // Add "Create New Campaign" card
+            const createCol = document.createElement('div');
+            createCol.className = 'col';
+            createCol.innerHTML = createNewCampaignCard();
+            grid.appendChild(createCol);
+        }
+
+        // Create campaign card HTML
+        function createCampaignCard(campaign) {
+            const campaignId = campaign.campaignId || 'unknown';
+            const campaignName = campaign.name || 'Unnamed Campaign';
+            const description = campaign.description || 'No description';
+            const playerCount = campaign.playerCount || 0;
+            const lastPlayed = campaign.lastPlayed ? formatDate(campaign.lastPlayed) : 'Never';
+            const status = campaign.status || 'active';
+            
+            const statusBadge = status === 'active' 
+                ? '<span class="badge bg-success">Active</span>' 
+                : '<span class="badge bg-secondary">Archived</span>';
+
+            return `
+                <div class="campaign-card" onclick="selectCampaign('${campaignId}')">
+                    <button class="campaign-card-delete-btn" onclick="event.stopPropagation(); deleteCampaign('${campaignId}', '${campaignName}')" title="Delete Campaign">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div class="campaign-icon">
+                        <i class="fas fa-scroll"></i>
+                    </div>
+                    <div class="campaign-name">${campaignName}</div>
+                    <div class="campaign-description">${description}</div>
+                    <div class="campaign-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Players</div>
+                            <div class="stat-value">${playerCount}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Last Played</div>
+                            <div class="stat-value">${lastPlayed}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value">${statusBadge}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create "New Campaign" card HTML
+        function createNewCampaignCard() {
+            return `
+                <div class="create-campaign-card" onclick="createNewCampaign()">
+                    <div class="create-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h4>Create New Campaign</h4>
+                    <p class="">Start a new adventure</p>
+                </div>
+            `;
+        }
+
+        // Format date for display
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        // Show/hide loading state
+        function showLoading(show) {
+            document.getElementById('loadingContainer').style.display = show ? 'block' : 'none';
+            document.getElementById('campaignsContainer').style.display = show ? 'none' : 'block';
+        }
+
+        // Show error message
+        function showError(message) {
+            const container = document.getElementById('campaignsContainer');
+            container.innerHTML = `
+                <div class="alert alert-danger text-center" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                    <button class="btn btn-primary mt-3 d-block mx-auto" onclick="loadCampaigns()">
+                        <i class="fas fa-redo me-2"></i>Retry
+                    </button>
+                </div>
+            `;
+        }
+
+        // Select a campaign and start session
+        async function selectCampaign(campaignId) {
+            console.log('Selected campaign:', campaignId);
+            
+            // Show loading state
+            const campaignCards = document.querySelectorAll('.campaign-card');
+            campaignCards.forEach(card => card.style.opacity = '0.5');
+            
+            try {
+                // Create a new session for this campaign
+                const response = await fetch('/dm/api/session/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        campaign_id: campaignId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    // Store session ID and campaign ID
+                    localStorage.setItem('activeSessionId', result.session_id);
+                    localStorage.setItem('activeCampaignId', campaignId);
+                    
+                    // Redirect to DM dashboard
+                    window.location.href = '/dm/dashboard';
+                } else {
+                    throw new Error(result.message || 'Failed to start session');
+                }
+                
+            } catch (error) {
+                console.error('Error starting session:', error);
+                alert(`Failed to start session: ${error.message}`);
+                
+                // Re-enable cards
+                campaignCards.forEach(card => card.style.opacity = '1');
+            }
+        }
+
+        // Delete a campaign
+        async function deleteCampaign(campaignId, campaignName) {
+            if (!confirm(`Are you sure you want to delete "${campaignName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`/dm/api/campaign/${campaignId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    console.log(result.message);
+                    loadCampaigns();
+                } else {
+                    throw new Error(result.message || 'An unknown error occurred.');
+                }
+
+            } catch (error) {
+                console.error('Error deleting campaign:', error);
+                alert(`Error: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        // Create new campaign
+        function createNewCampaign() {
+            console.log('Creating new campaign');
+            window.location.href = '/dm/createCampaign';
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/api/auth/logout';
+            }
+        }
+    </script>
+</body>
+</html>

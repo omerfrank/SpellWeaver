@@ -1,5 +1,6 @@
 from firebase_admin import db
 import datetime
+from app.models.game_session import GameSession, Campaign
 class FirebaseService:
     def __init__(self):
         """
@@ -374,3 +375,335 @@ class FirebaseService:
         except Exception as e:
             print(f"❌ Error updating character: {e}")
             return False
+
+    # ===== CAMPAIGN MANAGEMENT METHODS =====
+
+    def get_dm_campaigns(self, dm_id):
+        """Get all campaigns for a specific DM"""
+        try:
+            ref = db.reference(f'users/{dm_id}/dm/campaigns')
+            campaigns_data = ref.get()
+            
+            if not campaigns_data:
+                return {}
+            
+            # Convert to Campaign objects
+            campaigns = {}
+            for campaign_id, data in campaigns_data.items():
+                campaigns[campaign_id] = Campaign.from_dict(campaign_id, data).to_dict()
+            
+            return campaigns
+            
+        except Exception as e:
+            print(f"Error getting DM campaigns: {e}")
+            return None
+
+    def get_campaign(self, dm_id, campaign_id):
+        """Get a specific campaign as a Campaign object"""
+        try:
+            ref = db.reference(f'users/{dm_id}/dm/campaigns/{campaign_id}')
+            data = ref.get()
+            
+            if not data:
+                return None
+            
+            # Return as Campaign object
+            campaign = Campaign.from_dict(campaign_id, data)
+            return campaign.to_dict()
+            
+        except Exception as e:
+            print(f"Error getting campaign: {e}")
+            return None
+
+    def create_campaign(self, dm_id, campaign_name, description=""):
+        """Create a new campaign using Campaign model"""
+        try:
+            ref = db.reference(f'users/{dm_id}/dm/campaigns')
+            
+            # Create temporary campaign with placeholder ID
+            campaign_ref = ref.push()
+            campaign_id = campaign_ref.key
+            
+            # Create Campaign object
+            campaign = Campaign(
+                campaign_id=campaign_id,
+                dm_id=dm_id,
+                name=campaign_name,
+                description=description
+            )
+            
+            # Save to Firebase
+            campaign_ref.set(campaign.to_dict())
+            
+            print(f"✅ Campaign '{campaign_name}' created with ID: {campaign_id}")
+            return campaign_id
+            
+        except Exception as e:
+            print(f"❌ Error creating campaign: {e}")
+            return None
+
+    def update_campaign(self, dm_id, campaign_id, data):
+        """Update campaign data"""
+        try:
+            ref = db.reference(f'users/{dm_id}/dm/campaigns/{campaign_id}')
+            ref.update(data)
+            print(f"✅ Campaign {campaign_id} updated successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Error updating campaign: {e}")
+            return False
+
+    def delete_campaign(self, dm_id, campaign_id):
+        """Delete a campaign"""
+        try:
+            ref = db.reference(f'users/{dm_id}/dm/campaigns/{campaign_id}')
+            ref.delete()
+            print(f"✅ Campaign {campaign_id} deleted successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Error deleting campaign: {e}")
+            return False
+
+    # ===== GAME SESSION METHODS (Using GameSession Model) =====
+
+    def create_game_session(self, dm_id, campaign_id, campaign_name):
+        """Create a new game session using GameSession model"""
+        try:
+            ref = db.reference('sessions')
+            
+            # Create session reference to get ID
+            session_ref = ref.push()
+            session_id = session_ref.key
+            
+            # Create GameSession object
+            session = GameSession(
+                session_id=session_id,
+                dm_id=dm_id,
+                campaign_id=campaign_id,
+                campaign_name=campaign_name
+            )
+            
+            # Save to Firebase
+            session_ref.set(session.to_dict())
+            
+            # Update campaign's lastPlayed timestamp
+            self.update_campaign(dm_id, campaign_id, {
+                'lastPlayed': datetime.datetime.utcnow().isoformat()
+            })
+            
+            print(f"✅ Game session created: {session_id}")
+            return session_id
+            
+        except Exception as e:
+            print(f"❌ Error creating game session: {e}")
+            return None
+
+    def get_game_session(self, session_id):
+        """Get a GameSession object"""
+        try:
+            ref = db.reference(f'sessions/{session_id}')
+            data = ref.get()
+            
+            if not data:
+                return None
+            
+            # Return as GameSession object
+            session = GameSession.from_dict(session_id, data)
+            return session
+            
+        except Exception as e:
+            print(f"❌ Error getting game session: {e}")
+            return None
+
+    def save_game_session(self, session: GameSession):
+        """Save a GameSession object to Firebase"""
+        try:
+            ref = db.reference(f'sessions/{session.session_id}')
+            ref.set(session.to_dict())
+            print(f"✅ Session {session.session_id} saved")
+            return True
+        except Exception as e:
+            print(f"❌ Error saving session: {e}")
+            return False
+
+    def get_session_players(self, session_id):
+        """Get all active players in a session"""
+        try:
+            session = self.get_game_session(session_id)
+            if session:
+                return session.get_all_players()
+            return {}
+        except Exception as e:
+            print(f"❌ Error getting session players: {e}")
+            return None
+
+    def add_player_to_session(self, session_id, player_id, character_id, display_name):
+        """Add a player to an active game session using GameSession model"""
+        try:
+            # Get session
+            session = self.get_game_session(session_id)
+            if not session:
+                print(f"❌ Session {session_id} not found")
+                return False
+            
+            # Add player using model method
+            session.add_player(player_id, character_id, display_name)
+            
+            # Save back to Firebase
+            self.save_game_session(session)
+            
+            print(f"✅ Player {player_id} added to session {session_id}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error adding player to session: {e}")
+            return False
+
+    def assign_mini_to_player(self, session_id, player_id, mini_id):
+        """Assign a mini to a player's character using GameSession model"""
+        try:
+            # Get session
+            session = self.get_game_session(session_id)
+            if not session:
+                print(f"❌ Session {session_id} not found")
+                return False
+            
+            # Assign mini using model method
+            success = session.assign_mini(player_id, mini_id)
+            
+            if success:
+                # Save back to Firebase
+                self.save_game_session(session)
+                print(f"✅ Mini {mini_id} assigned to player {player_id}")
+                return True
+            
+            print(f"❌ Player {player_id} not found in session")
+            return False
+            
+        except Exception as e:
+            print(f"❌ Error assigning mini: {e}")
+            return False
+
+    def get_dm_sessions(self, dm_id):
+        """Get all sessions for a specific DM"""
+        try:
+            ref = db.reference('sessions')
+            all_sessions = ref.get()
+            
+            if not all_sessions:
+                return {}
+            
+            # Filter by DM and convert to GameSession objects
+            dm_sessions = {}
+            for session_id, data in all_sessions.items():
+                session_info = data.get('sessionInfo', {})
+                if session_info.get('dm_id') == dm_id:
+                    session = GameSession.from_dict(session_id, data)
+                    dm_sessions[session_id] = session.to_dict()
+            
+            return dm_sessions
+            
+        except Exception as e:
+            print(f"❌ Error getting DM sessions: {e}")
+            return None
+
+    def update_player_status(self, session_id, player_id, status):
+        """Update player connection status using GameSession model"""
+        try:
+            # Get session
+            session = self.get_game_session(session_id)
+            if not session:
+                return False
+            
+            # Update status using model method
+            success = session.update_player_status(player_id, status)
+            
+            if success:
+                # Save back to Firebase
+                self.save_game_session(session)
+                return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"❌ Error updating player status: {e}")
+            return False
+
+    def remove_player_from_session(self, session_id, player_id):
+        """Remove a player from a session using GameSession model"""
+        try:
+            # Get session
+            session = self.get_game_session(session_id)
+            if not session:
+                return False
+            
+            # Remove player using model method
+            success = session.remove_player(player_id)
+            
+            if success:
+                # Save back to Firebase
+                self.save_game_session(session)
+                print(f"✅ Player {player_id} removed from session {session_id}")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"❌ Error removing player from session: {e}")
+            return False
+
+    def end_game_session(self, session_id):
+        """End a game session using GameSession model"""
+        try:
+            # Get session
+            session = self.get_game_session(session_id)
+            if not session:
+                return False
+            
+            # End session using model method
+            session.end_session()
+            
+            # Save back to Firebase
+            self.save_game_session(session)
+            
+            print(f"✅ Session {session_id} ended")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error ending session: {e}")
+            return False
+
+    # ===== TURN MANAGEMENT METHODS =====
+
+    def set_turn_order(self, session_id, player_ids):
+        """Set the turn order for combat"""
+        try:
+            session = self.get_game_session(session_id)
+            if not session:
+                return False
+            
+            session.set_turn_order(player_ids)
+            self.save_game_session(session)
+            
+            print(f"✅ Turn order set for session {session_id}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error setting turn order: {e}")
+            return False
+
+    def next_turn(self, session_id):
+        """Move to the next player's turn"""
+        try:
+            session = self.get_game_session(session_id)
+            if not session:
+                return None
+            
+            next_player = session.next_turn()
+            self.save_game_session(session)
+            
+            return next_player
+            
+        except Exception as e:
+            print(f"❌ Error advancing turn: {e}")
+            return None
