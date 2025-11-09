@@ -115,7 +115,7 @@ async function loadCharacterData() {
 // Update UI elements with character data
 function updateUIWithCharacterData() {
     document.getElementById('name').value = character.name;
-    document.getElementById('level').value = `${character.class} ${character.level}`;
+    document.getElementById('level').value = `${character.class} ${character.level}`;    
     document.getElementById('currentHP').value = character.hp;
     document.getElementById('maxHP').value = character.maxHp;
     document.getElementById('speed').value = character.speed;
@@ -133,15 +133,44 @@ function updateUIWithCharacterData() {
         currentHPInput.classList.remove("tmp-hp");
     }
 }
+function processString(inputStr) {
+  
+  // 1. Find all numbers (sequences of digits)
+  // The 'g' flag means 'global' (find all matches)
+  // We use || [] to ensure we have an empty array if no numbers are found
+  const numbers = inputStr.match(/\d+/g) || [];
+  
+  // 2. Calculate the sum
+  // .reduce() iterates over the array of number strings
+  // parseInt() converts each string to an integer
+  // 'acc' is the 'accumulator' (the running total), starting at 0
+  const sum = numbers.reduce((acc, numStr) => acc + parseInt(numStr, 10), 0);
+  
+  // 3. Find all words (sequences of letters)
+  // [a-zA-Z] matches any letter from a-z, upper or lower case
+  // + means "one or more"
+  const words = inputStr.match(/[a-zA-Z]+/g) || [];
+  
+  // 4. Join all found words with a comma
+  const wordString = words.join(',');
+  
+  // 5. Return both values as an object
+  return {
+    sum: sum,
+    words: wordString
+  };
+}
 
 // Save character data to server
 async function saveCharacterData() {
     try {
         // Prepare data to save
+        console.log(character.level, character.class);
+        const { sum, words } = processString(document.getElementById('level').value);
         const dataToSave = {
             name: document.getElementById('name').value,
-            level: character.level,
-            class: character.class,
+            level: sum,
+            class: words,
             race: character.race,
             hp: parseInt(document.getElementById('currentHP').value),
             maxHp: parseInt(document.getElementById('maxHP').value),
@@ -163,9 +192,7 @@ async function saveCharacterData() {
         const result = await response.json();
         
         if (result.status === 'success') {
-            console.log('✅ Character data saved successfully');
-            // Show success feedback (optional)
-            showSaveNotification();
+            console.log('Character data saved successfully');
         } else {
             console.error('Failed to save character:', result.message);
         }
@@ -174,20 +201,6 @@ async function saveCharacterData() {
     }
 }
 
-// Show save notification
-function showSaveNotification() {
-    // Create a temporary notification element
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
-    notification.style.zIndex = '9999';
-    notification.textContent = 'Character saved!';
-    document.body.appendChild(notification);
-    
-    // Remove after 2 seconds
-    setTimeout(() => {
-        notification.remove();
-    }, 2000);
-}
 
 // Auto-save functionality - save whenever data changes
 let saveTimeout;

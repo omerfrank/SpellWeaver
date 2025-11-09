@@ -59,7 +59,6 @@ function createCharacterCard(character) {
     const charId = character.characterId || 'unknown';
     const charName = character.name || 'Unknown Character';
     const charImg = character.img || '/static/img/Adventurer.webp'; // Default image
-    const charRace = character.race || 'Unknown';
     const charClass = character.class || 'Adventurer';
     const charLevel = character.level || 1;
     const charHp = character.hp || 10;
@@ -75,7 +74,7 @@ function createCharacterCard(character) {
             <img class="character-avatar" src="${charImg}" alt="${charName}">
             <div class="character-name">${charName}</div>
             <div class="character-info">
-                ${charRace} ${charClass} • Level ${charLevel}
+                ${charClass} • Level ${charLevel}
             </div>
             <div class="character-stats">
                 <div class="stat-item">

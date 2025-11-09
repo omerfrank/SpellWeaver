@@ -73,8 +73,8 @@ function displayCharacter(character) {
     if (classElement) {
         const level = character.level || 1;
         const charClass = character.class || 'Adventurer';
-        const race = character.race || '';
-        classElement.textContent = `Level ${level} ${race} ${charClass}`.trim();
+        let title = level < 3 ? 'Unkonwn': level < 5 ? "Trained" : level < 10 ? "Expert" : level < 15 ? "Master" : "Legendary";
+        classElement.textContent = `Level ${level} ${title} ${charClass}`.trim();
     }
 
     // HP

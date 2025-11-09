@@ -11,7 +11,7 @@
     <link rel="icon" type="image/webp" href="/static/icons/Quest_Weaver_Icon.webp">
 </head>
 <body>
-    <!-- side bar -->
+        <!-- side bar -->
     <button class="btn btn-secondary bi bi-list sticky-sidebar-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
     </button>
 
@@ -44,7 +44,6 @@
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Armor Class</label>
                         <div class="clickable-stat stat-box" onclick="openBonusModal('ac')">
-                            <!-- <input type="number" class="form-control text-center mb-2" id="ac" value="12" readonly> -->
                             <div class="stat-bonus" id="ac">10</div>
                             <small>Click to configure</small>
                         </div>
@@ -72,12 +71,12 @@
                                 
                                 <div class="d-flex align-items-center">
                                     <div class="text-center me-2">
-                                        <small class="text-muted d-block">Current</small>
+                                        <small class=" d-block">Current</small>
                                         <input type="number" class="form-control text-center current-hp" id="currentHP" value="25" style="width: 70px;">
                                     </div>
                                     <span class="hp-separator mx-2">/</span>
                                     <div class="text-center ms-2">
-                                        <small class="text-muted d-block">Max</small>
+                                        <small class=" d-block">Max</small>
                                         <input type="number" class="form-control text-center max-hp" id="maxHP" value="25" style="width: 70px;">
                                     </div>
                                 </div>
@@ -155,7 +154,7 @@
                     <div class="mt-3" id="dexLimitContainer" style="display: none;">
                         <label for="dexLimitInput" class="form-label">Dexterity Limit (Heavy Armor):</label>
                         <input type="number" class="form-control" id="dexLimitInput" placeholder="Leave empty for no limit">
-                        <small class="text-muted">Heavy armor typically limits Dex bonus to +2</small>
+                        <small class="">Heavy armor typically limits Dex bonus to +2</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -164,8 +163,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
+    </div>``
     <!-- Desktop navbar -->
     <nav class="footer-navbar d-none d-md-block" dir="ltr">
         <div class="container d-flex justify-content-center">
