@@ -1,12 +1,30 @@
-// Character data structure
-const character = {
+// Get character ID from local storage
+const characterId = localStorage.getItem('selectedCharacterId');
+
+if (!characterId) {
+    alert('No character selected. Redirecting to character selection...');
+    window.location.href = '/player/characterSelect';
+}
+
+// Character data structure - will be populated from database
+let character = {
+    characterId: characterId,
+    name: '',
+    class: '',
+    level: 1,
+    race: '',
+    hp: 10,
+    maxHp: 10,
+    ac: 10,
+    speed: 30,
+    proficiencyBonus: 2,
     abilities: {
         str: { score: 10, savingThrowProficient: false },
-        dex: { score: 14, savingThrowProficient: false },
-        con: { score: 12, savingThrowProficient: false },
-        int: { score: 13, savingThrowProficient: false },
-        wis: { score: 15, savingThrowProficient: false },
-        cha: { score: 8, savingThrowProficient: false }
+        dex: { score: 10, savingThrowProficient: false },
+        con: { score: 10, savingThrowProficient: false },
+        int: { score: 10, savingThrowProficient: false },
+        wis: { score: 10, savingThrowProficient: false },
+        cha: { score: 10, savingThrowProficient: false }
     },
     skills: {},
     bonuses: {
@@ -14,13 +32,12 @@ const character = {
         passivePerception: 0
     },
     acSettings: {
-        dexLimit: null, // null means no limit
+        dexLimit: null,
         bonus: 0
-    },
-    proficiencyBonus: 2
+    }
 };
 
-// Skills data
+// Skills data with default structure
 const skillsData = {
     'Athletics': { ability: 'str', proficient: false },
     'Acrobatics': { ability: 'dex', proficient: false },
@@ -45,33 +62,170 @@ const skillsData = {
 // Initialize skills
 character.skills = { ...skillsData };
 
+// Load character data from server
+async function loadCharacterData() {
+    try {
+        const response = await fetch(`/api/game/character/${characterId}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            const charData = data.character;
+            
+            // Update character object with database data
+            character.name = charData.name || '';
+            character.class = charData.class || 'Adventurer';
+            character.level = charData.level || 1;
+            character.race = charData.race || 'Unknown';
+            character.hp = charData.hp || 10;
+            character.maxHp = charData.maxHp || 10;
+            character.ac = charData.ac || 10;
+            character.speed = charData.speed || 30;
+            character.proficiencyBonus = charData.proficiencyBonus || 2;
+            
+            // Load abilities
+            if (charData.abilities) {
+                character.abilities = charData.abilities;
+            }
+            
+            // Load skills
+            if (charData.skills) {
+                character.skills = charData.skills;
+            }
+            
+            // Calculate derived stats from saved AC
+            // If AC is different from base 10, calculate the bonus
+            const dexMod = getAbilityModifier(character.abilities.dex.score);
+            character.acSettings.bonus = character.ac - (10 + dexMod);
+            
+            // Update UI with loaded data
+            updateUIWithCharacterData();
+            refreshDisplay();
+            
+            console.log('✅ Character data loaded successfully');
+        } else {
+            console.error('Failed to load character:', data.message);
+            alert('Failed to load character data');
+        }
+    } catch (error) {
+        console.error('Error loading character:', error);
+        alert('Error loading character data');
+    }
+}
+
+// Update UI elements with character data
+function updateUIWithCharacterData() {
+    document.getElementById('name').value = character.name;
+    document.getElementById('level').value = `${character.class} ${character.level}`;
+    document.getElementById('currentHP').value = character.hp;
+    document.getElementById('maxHP').value = character.maxHp;
+    document.getElementById('speed').value = character.speed;
+    
+    // Update HP styling
+    const currentHPInput = document.getElementById('currentHP');
+    if (character.hp > character.maxHp) {
+        currentHPInput.classList.add("tmp-hp");
+        currentHPInput.classList.remove("bleeding");
+    } else if (character.hp < character.maxHp / 2) {
+        currentHPInput.classList.add("bleeding");
+        currentHPInput.classList.remove("tmp-hp");
+    } else {
+        currentHPInput.classList.remove("bleeding");
+        currentHPInput.classList.remove("tmp-hp");
+    }
+}
+
+// Save character data to server
+async function saveCharacterData() {
+    try {
+        // Prepare data to save
+        const dataToSave = {
+            name: document.getElementById('name').value,
+            level: character.level,
+            class: character.class,
+            race: character.race,
+            hp: parseInt(document.getElementById('currentHP').value),
+            maxHp: parseInt(document.getElementById('maxHP').value),
+            ac: parseInt(document.getElementById('ac').textContent),
+            speed: parseInt(document.getElementById('speed').value),
+            proficiencyBonus: character.proficiencyBonus,
+            abilities: character.abilities,
+            skills: character.skills
+        };
+        
+        const response = await fetch(`/api/game/character/${characterId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSave)
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            console.log('✅ Character data saved successfully');
+            // Show success feedback (optional)
+            showSaveNotification();
+        } else {
+            console.error('Failed to save character:', result.message);
+        }
+    } catch (error) {
+        console.error('Error saving character:', error);
+    }
+}
+
+// Show save notification
+function showSaveNotification() {
+    // Create a temporary notification element
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
+    notification.style.zIndex = '9999';
+    notification.textContent = 'Character saved!';
+    document.body.appendChild(notification);
+    
+    // Remove after 2 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
+}
+
+// Auto-save functionality - save whenever data changes
+let saveTimeout;
+function scheduleSave() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        saveCharacterData();
+    }, 1000); // Save 1 second after last change
+}
+
 // Calculate ability modifier
 function getAbilityModifier(score) {
     return Math.floor((score - 10) / 2);
 }
-function checkedSkill(ability, state){
-    const checkedSkill = document.getElementById(ability)
-    if (state){
-        checkedSkill.classList.add("checked-skill")
-    }
-    else{
 
-        checkedSkill.classList.remove("checked-skill")
+function checkedSkill(ability, state) {
+    const checkedSkill = document.getElementById(ability);
+    if (state) {
+        checkedSkill.classList.add("checked-skill");
+    } else {
+        checkedSkill.classList.remove("checked-skill");
     }
 }
+
 // Generate ability scores HTML
 function generateAbilityScores() {
     const container = document.getElementById('abilityScores');
     const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     const abilityNames = {
         str: 'Strength',
-        dex: 'Dexterity', 
+        dex: 'Dexterity',
         con: 'Constitution',
         int: 'Intelligence',
         wis: 'Wisdom',
         cha: 'Charisma'
     };
 
+    container.innerHTML = '';
     abilities.forEach(ability => {
         const modifier = getAbilityModifier(character.abilities[ability].score);
         const modifierText = modifier >= 0 ? `+${modifier}` : `${modifier}`;
@@ -103,6 +257,7 @@ function generateAbilityScores() {
         }
     });
 }
+
 // Generate skills HTML
 function generateSkills() {
     const container = document.getElementById('skillsList');
@@ -114,6 +269,7 @@ function generateSkills() {
         'Charisma': ['Deception', 'Intimidation', 'Performance', 'Persuasion']
     };
 
+    container.innerHTML = '';
     Object.entries(skillCategories).forEach(([category, skills]) => {
         container.innerHTML += `<h6 class="mt-3 mb-2">${category}</h6>`;
         
@@ -146,18 +302,21 @@ function generateSkills() {
 function updateAbilityScore(ability, newScore) {
     character.abilities[ability].score = parseInt(newScore) || 10;
     refreshDisplay();
+    scheduleSave();
 }
 
 // Update saving throw proficiency
 function updateSavingThrowProficiency(ability, proficient) {
     character.abilities[ability].savingThrowProficient = proficient;
     refreshDisplay();
+    scheduleSave();
 }
 
 // Update skill proficiency
 function updateSkillProficiency(skill, proficient) {
     character.skills[skill].proficient = proficient;
     refreshDisplay();
+    scheduleSave();
 }
 
 // Get saving throw bonus
@@ -179,8 +338,8 @@ function getSkillBonus(skillName) {
 // Calculate initiative
 function calculateInitiative() {
     const dexModifier = getAbilityModifier(character.abilities.dex.score);
-    const total = 10 + dexModifier + character.bonuses.initiative;
-    const totalText = total >= 10 ? `+${total - 10}` : `${total - 10}`;
+    const total = dexModifier + character.bonuses.initiative;
+    const totalText = total >= 0 ? `+${total}` : `${total}`;
     document.getElementById('initiativeTotal').textContent = totalText;
 }
 
@@ -191,6 +350,7 @@ function calculatePassivePerception() {
     const total = 10 + wisModifier + proficiencyBonus + character.bonuses.passivePerception;
     document.getElementById('passivePerceptionTotal').textContent = total;
 }
+
 // Calculate AC
 function calculateAC() {
     const dexModifier = getAbilityModifier(character.abilities.dex.score);
@@ -207,18 +367,19 @@ function changeHP(amount) {
     let newHP = parseInt(currentHPInput.value) + amount;
     newHP = Math.max(0, newHP);
     currentHPInput.value = newHP;
-    if (newHP > maxHP){
+    
+    if (newHP > maxHP) {
         currentHPInput.classList.remove("bleeding");
         currentHPInput.classList.add("tmp-hp");
-    }
-    else if (newHP < maxHP/2){
+    } else if (newHP < maxHP / 2) {
         currentHPInput.classList.add("bleeding");
         currentHPInput.classList.remove("tmp-hp");
-    }
-    else{
+    } else {
         currentHPInput.classList.remove("bleeding");
         currentHPInput.classList.remove("tmp-hp");
     }
+    
+    scheduleSave();
 }
 
 // Modal handling
@@ -276,6 +437,7 @@ function saveBonuses() {
     }
 
     bootstrap.Modal.getInstance(document.getElementById('bonusModal')).hide();
+    scheduleSave();
 }
 
 // Refresh display
@@ -289,14 +451,20 @@ function refreshDisplay() {
     generateSkills();
     calculateInitiative();
     calculatePassivePerception();
-    calculateAC(); 
+    calculateAC();
+}
+
+// Add event listeners for fields that should trigger save
+function setupAutoSave() {
+    document.getElementById('name').addEventListener('change', scheduleSave);
+    document.getElementById('level').addEventListener('change', scheduleSave);
+    document.getElementById('currentHP').addEventListener('change', scheduleSave);
+    document.getElementById('maxHP').addEventListener('change', scheduleSave);
+    document.getElementById('speed').addEventListener('change', scheduleSave);
 }
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    generateAbilityScores();
-    generateSkills();
-    calculateInitiative();
-    calculatePassivePerception();
-    calculateAC();
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadCharacterData();
+    setupAutoSave();
 });

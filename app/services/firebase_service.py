@@ -364,3 +364,13 @@ class FirebaseService:
         except Exception as e:
             print(f"❌ Error deleting character: {e}")
             return False
+    def update_character(self, player_id, character_id, data):
+        """Update specific character data in Firebase"""
+        try:
+            ref = db.reference(f'users/{player_id}/player/characters/{character_id}')
+            ref.update(data)
+            print(f"✅ Character {character_id} updated successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Error updating character: {e}")
+            return False

@@ -63,7 +63,34 @@ def get_character(character_id):
     
     print(f"✅ Character fetched successfully: {character_data.get('name', 'Unknown')}")
     return jsonify({"status": "success", "character": character_data}), 200
-
+@game_bp.route('/character/<character_id>', methods=['POST'])
+@login_required
+def save_character(character_id):
+    """
+    API endpoint to save/update a specific character for the logged-in user.
+    """
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    if not character_id:
+        return jsonify({"status": "error", "message": "Character ID is required"}), 400
+    
+    try:
+        data = request.get_json()
+        
+        # Update character data in Firebase
+        success = firebase.update_character(user_id, character_id, data)
+        
+        if success:
+            print(f"✅ Character saved successfully: {data.get('name', 'Unknown')}")
+            return jsonify({"status": "success", "message": "Character saved"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Failed to save character"}), 500
+            
+    except Exception as e:
+        print(f"Error saving character: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 @game_bp.route('/createCharacter', methods=['POST'])
 @login_required
 def create_character_api():
