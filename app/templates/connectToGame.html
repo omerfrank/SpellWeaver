@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect to Game - Quest Weaver</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/connectToGame.css">
+    <link rel="icon" type="image/webp" href="/static/icons/Quest_Weaver_Icon.webp">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-navbar">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="/static/icons/Quest_Weaver_Icon.webp" class="navbar-logo" alt="Quest Weaver Logo">
+                    <strong>Quest Weaver</strong>
+                </div>
+                <button class="btn btn-outline-light btn-sm" onclick="goBack()">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1><i class="fas fa-link me-3"></i>Connect to Game</h1>
+            <p class="text-muted">Enter the game code to join your DM's session</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <div class="connect-container">
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Character Selection (if multiple characters exist) -->
+            <div class="character-selection-section mb-4" id="characterSelectionSection">
+                <label class="form-label section-title">
+                    <i class="fas fa-user me-2"></i>Select Your Character
+                </label>
+                <div class="character-cards-container" id="characterCardsContainer">
+                    <!-- Character cards will be loaded here -->
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading characters...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Code Input -->
+            <div class="game-code-section">
+                <label for="gameCodeInput" class="form-label section-title">
+                    <i class="fas fa-key me-2"></i>Game Code
+                </label>
+                <div class="game-code-input-group">
+                    <input 
+                        type="text" 
+                        class="form-control game-code-input" 
+                        id="gameCodeInput" 
+                        placeholder="Enter 6-digit code"
+                        maxlength="6"
+                        disabled
+                    >
+                    <button class="btn btn-paste" onclick="pasteFromClipboard()" title="Paste from clipboard">
+                        <i class="fas fa-paste"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Ask your DM for the game session code</small>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="connection-status" id="connectionStatus" style="display: none;">
+                <div class="status-indicator">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                        <span class="visually-hidden">Connecting...</span>
+                    </div>
+                    <span id="statusText">Connecting to game...</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <button class="btn btn-cancel" onclick="goBack()">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button class="btn btn-connect" id="connectBtn" onclick="connectToGame()" disabled>
+                    <i class="fas fa-plug me-2"></i>Connect to Game
+                </button>
+            </div>
+
+            <!-- Help Section -->
+            <div class="help-section mt-5">
+                <h5 class="text-center mb-3">
+                    <i class="fas fa-question-circle me-2"></i>Need Help?
+                </h5>
+                <div class="help-cards">
+                    <div class="help-card">
+                        <div class="help-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h6>Where do I get the code?</h6>
+                        <p>Your DM will provide you with a 6-digit game code when they start a session.</p>
+                    </div>
+                    <div class="help-card">
+                        <div class="help-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h6>Code not working?</h6>
+                        <p>Make sure you've entered the code correctly and that your DM's session is still active.</p>
+                    </div>
+                    <div class="help-card">
+                        <div class="help-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h6>Already in a session?</h6>
+                        <p>You can only be connected to one game session at a time. Disconnect first to join a new one.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/connectToGame.js"></script>
+</body>
+</html>
