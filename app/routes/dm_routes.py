@@ -237,3 +237,37 @@ def end_session(session_id):
         return jsonify({'status': 'success'}), 200
     else:
         return jsonify({'status': 'error', 'message': 'Failed to end session'}), 500
+
+@dm_bp.route('/api/character/<player_id>/<character_id>', methods=['GET'])
+@login_required
+def get_character_vitals(player_id, character_id):
+    """
+    Get a specific character's vitals for the DM dashboard.
+    We check the DM is logged in, but we don't need to check
+    if the player is in their session, as only the DM dashboard
+    (which already knows the session) should be calling this.
+    """
+    dm_id = session.get('user_id')
+    if not dm_id:
+        return jsonify({"status": "error", "message": "DM not logged in"}), 401
+    
+    if not player_id or not character_id:
+        return jsonify({"status": "error", "message": "Player ID and Character ID are required"}), 400
+    
+    try:
+        # Use the existing firebase service function that takes both IDs
+        character = firebase.get_player_character(player_id, character_id)
+        
+        if character is None:
+            # This indicates an internal error from Firebase
+            return jsonify({"status": "error", "message": "Failed to fetch character data"}), 500
+        
+        if not character:
+            # This indicates the character was not found (empty dict)
+            return jsonify({"status": "error", "message": "Character not found"}), 404
+        
+        return jsonify({"status": "success", "character": character}), 200
+    
+    except Exception as e:
+        print(f"Error in get_character_vitals route: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500

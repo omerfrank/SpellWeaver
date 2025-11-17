@@ -37,6 +37,7 @@ body {
 
 .card-body {
     padding: 15px;
+    color: white;
 }
 
 /* Session Code Section */
@@ -131,6 +132,7 @@ body {
 
 .vital-stat-value {
     font-weight: bold;
+    color: white;
 }
 
 .hp-critical {

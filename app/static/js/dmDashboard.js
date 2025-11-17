@@ -6,7 +6,7 @@ let campaignId = null;
 let sessionCode = null;
 let isPaused = false;
 let refreshInterval = null;
-
+let g_activePlayerIds = new Set();
 /**
  * Initialize dashboard
  */
@@ -97,12 +97,49 @@ function updateActivePlayers(players) {
             </div>
         `;
         playerCount.textContent = '0';
+        g_activePlayerIds = new Set(); // Clear the set if no players
         return;
     }
 
-    const connectedCount = Object.values(players).filter(p => p.connection_status === 'connected').length;
-    playerCount.textContent = connectedCount;
+    // Get a Set of all *currently* connected player IDs
+    const newConnectedPlayerIds = new Set(
+        Object.entries(players)
+              .filter(([_, player]) => player.connection_status === 'connected')
+              .map(([playerId, _]) => playerId)
+    );
 
+    // --- NEW LOGIC TO FIND NEW/DISCONNECTED PLAYERS ---
+
+    // 1. Find newly connected players
+    // (Players in the new set but not in the old 'g_activePlayerIds' set)
+    for (const playerId of newConnectedPlayerIds) {
+        if (!g_activePlayerIds.has(playerId)) {
+            // This is a new player
+            const playerName = players[playerId]?.display_name || 'Unknown Player';
+            addLogEntry(`${playerName} has connected.`, 'system');
+        }
+    }
+
+    // 2. Find disconnected players (Optional, but good to have)
+    // (Players who were in the old set but are NOT in the new set)
+    for (const playerId of g_activePlayerIds) {
+        if (!newConnectedPlayerIds.has(playerId)) {
+            // This player disconnected
+            // We need the player's name from the *full* players object
+            const playerName = players[playerId]?.display_name || 'Unknown Player';
+            addLogEntry(`${playerName} has disconnected.`, 'system');
+        }
+    }
+
+    // 3. Update the global set for the next refresh
+    g_activePlayerIds = newConnectedPlayerIds;
+
+    // --- END NEW LOGIC ---
+
+    // Update the player count text
+    playerCount.textContent = newConnectedPlayerIds.size;
+
+    // Build the HTML for the player list
     container.innerHTML = Object.entries(players).map(([playerId, player]) => {
         const statusClass = player.connection_status === 'connected' ? 'status-connected' : 'status-disconnected';
         return `
@@ -136,9 +173,13 @@ async function loadPlayerVitals(players) {
     const vitalsHTML = await Promise.all(
         Object.entries(players)
             .filter(([_, player]) => player.connection_status === 'connected')
-            .map(async ([playerId, player]) => {
+            .map(async ([playerId, player]) => { // <-- 'playerId' is available here!
                 try {
-                    const charResponse = await fetch(`/api/game/character/${player.selected_character_id}`);
+                    
+                    // ===== THIS IS THE CHANGED LINE =====
+                    const charResponse = await fetch(`/dm/api/character/${playerId}/${player.selected_character_id}`);
+                    // ====================================
+
                     const charResult = await charResponse.json();
                     
                     if (charResult.status === 'success') {
@@ -171,7 +212,7 @@ async function loadPlayerVitals(players) {
                                 </div>
                                 <div class="vital-stat">
                                     <span class="vital-stat-label">AC:</span>
-                                    <span class="vital-stat-value">${char.ac}</span>
+                                    <span class="vital-stat-value" style="color: #7289da;">${char.ac}</span>
                                 </div>
                                 <div class="vital-stat">
                                     <span class="vital-stat-label">Passive Perception:</span>
@@ -212,7 +253,6 @@ async function loadPlayerVitals(players) {
         `;
     }
 }
-
 /**
  * Copy session code to clipboard
  */
@@ -286,7 +326,7 @@ function previewMap() {
     if (mapUrl) {
         preview.innerHTML = `<img src="${mapUrl}" alt="Map preview">`;
     } else {
-        preview.innerHTML = '<span class="text-muted">No map selected</span>';
+        preview.innerHTML = '<span class="">No map selected</span>';
     }
 }
 
