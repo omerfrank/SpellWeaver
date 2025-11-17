@@ -204,47 +204,53 @@
             `;
         }
 
-        // Select a campaign and start session
-        async function selectCampaign(campaignId) {
-            console.log('Selected campaign:', campaignId);
-            
-            // Show loading state
-            const campaignCards = document.querySelectorAll('.campaign-card');
-            campaignCards.forEach(card => card.style.opacity = '0.5');
-            
-            try {
-                // Create a new session for this campaign
-                const response = await fetch('/dm/api/session/create', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        campaign_id: campaignId
-                    })
-                });
+        // Update the selectCampaign function in campaignSelect.html
 
-                const result = await response.json();
+// Select a campaign and start session
+async function selectCampaign(campaignId) {
+    console.log('Selected campaign:', campaignId);
+    
+    // Show loading state
+    const campaignCards = document.querySelectorAll('.campaign-card');
+    campaignCards.forEach(card => card.style.opacity = '0.5');
+    
+    try {
+        // Create a new session for this campaign
+        const response = await fetch('/dm/api/session/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                campaign_id: campaignId
+            })
+        });
 
-                if (response.ok && result.status === 'success') {
-                    // Store session ID and campaign ID
-                    localStorage.setItem('activeSessionId', result.session_id);
-                    localStorage.setItem('activeCampaignId', campaignId);
-                    
-                    // Redirect to DM dashboard
-                    window.location.href = '/dm/dashboard';
-                } else {
-                    throw new Error(result.message || 'Failed to start session');
-                }
-                
-            } catch (error) {
-                console.error('Error starting session:', error);
-                alert(`Failed to start session: ${error.message}`);
-                
-                // Re-enable cards
-                campaignCards.forEach(card => card.style.opacity = '1');
-            }
+        const result = await response.json();
+
+        if (response.ok && result.status === 'success') {
+            // Store session ID, campaign ID, and session code
+            localStorage.setItem('activeSessionId', result.session_id);
+            localStorage.setItem('activeCampaignId', campaignId);
+            
+            console.log('Session created successfully!');
+            console.log('Session ID:', result.session_id);
+            console.log('Session Code:', result.session_code); // NEW: Log the session code
+            
+            // Redirect to DM dashboard
+            window.location.href = '/dm/dashboard';
+        } else {
+            throw new Error(result.message || 'Failed to start session');
         }
+        
+    } catch (error) {
+        console.error('Error starting session:', error);
+        alert(`Failed to start session: ${error.message}`);
+        
+        // Re-enable cards
+        campaignCards.forEach(card => card.style.opacity = '1');
+    }
+}
 
         // Delete a campaign
         async function deleteCampaign(campaignId, campaignName) {

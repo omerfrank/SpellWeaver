@@ -1,6 +1,8 @@
 from firebase_admin import db
 import datetime
 from app.models.game_session import GameSession, Campaign
+import random
+import string
 class FirebaseService:
     def __init__(self):
         """
@@ -708,3 +710,172 @@ class FirebaseService:
         except Exception as e:
             print(f"❌ Error advancing turn: {e}")
             return None
+    def generate_session_code(self):
+        """Generate a unique 6-character session code"""
+        while True:
+            # Generate random 6-character alphanumeric code
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            
+            # Check if code already exists
+            if not self.session_code_exists(code):
+                return code
+    
+    def session_code_exists(self, code):
+        """Check if a session code already exists"""
+        try:
+            ref = db.reference('sessionCodes')
+            existing = ref.child(code).get()
+            return existing is not None
+        except Exception as e:
+            print(f"Error checking session code: {e}")
+            return False
+    
+    def store_session_code(self, session_id, code):
+        """Store a session code mapping"""
+        try:
+            ref = db.reference(f'sessionCodes/{code}')
+            ref.set({
+                'session_id': session_id,
+                'created_at': datetime.datetime.utcnow().isoformat()
+            })
+            
+            # Also store the code in the session itself
+            session_ref = db.reference(f'sessions/{session_id}/sessionInfo')
+            session_ref.update({'session_code': code})
+            
+            return True
+        except Exception as e:
+            print(f"Error storing session code: {e}")
+            return False
+    
+    def get_session_by_code(self, code):
+        """Get session ID from a session code"""
+        try:
+            ref = db.reference(f'sessionCodes/{code}')
+            data = ref.get()
+            
+            if data:
+                return data.get('session_id')
+            return None
+        except Exception as e:
+            print(f"Error getting session by code: {e}")
+            return None
+    
+    def remove_session_code(self, code):
+        """Remove a session code (when session ends)"""
+        try:
+            ref = db.reference(f'sessionCodes/{code}')
+            ref.delete()
+            return True
+        except Exception as e:
+            print(f"Error removing session code: {e}")
+            return False
+    
+    def create_game_session(self, dm_id, campaign_id, campaign_name):
+        """Create a new game session with a session code"""
+        try:
+            ref = db.reference('sessions')
+            
+            # Create session reference to get ID
+            session_ref = ref.push()
+            session_id = session_ref.key
+            
+            # Generate unique session code
+            session_code = self.generate_session_code()
+            
+            # Create GameSession object
+            session = GameSession(
+                session_id=session_id,
+                dm_id=dm_id,
+                campaign_id=campaign_id,
+                campaign_name=campaign_name
+            )
+            
+            # Save to Firebase
+            session_ref.set(session.to_dict())
+            
+            # Store session code mapping
+            self.store_session_code(session_id, session_code)
+            
+            # Update campaign's lastPlayed timestamp
+            self.update_campaign(dm_id, campaign_id, {
+                'lastPlayed': datetime.datetime.utcnow().isoformat()
+            })
+            
+            print(f"✅ Game session created: {session_id} with code: {session_code}")
+            return session_id
+            
+        except Exception as e:
+            print(f"❌ Error creating game session: {e}")
+            return None
+    
+    def get_session_code(self, session_id):
+        """Get the session code for a session"""
+        try:
+            ref = db.reference(f'sessions/{session_id}/sessionInfo/session_code')
+            return ref.get()
+        except Exception as e:
+            print(f"Error getting session code: {e}")
+            return None
+    
+    def get_player_active_session(self, player_id):
+        """Get the active session for a player (if any)"""
+        try:
+            # Search through all sessions to find one with this player
+            ref = db.reference('sessions')
+            all_sessions = ref.get()
+            
+            if not all_sessions:
+                return None
+            
+            for session_id, data in all_sessions.items():
+                active_players = data.get('activePlayers', {})
+                
+                if player_id in active_players:
+                    player_data = active_players[player_id]
+                    
+                    # Only return if player is connected
+                    if player_data.get('connection_status') == 'connected':
+                        session_info = data.get('sessionInfo', {})
+                        
+                        return {
+                            'session_id': session_id,
+                            'campaign_name': session_info.get('campaign_name'),
+                            'dm_id': session_info.get('dm_id'),
+                            'character_id': player_data.get('selected_character_id'),
+                            'session_code': session_info.get('session_code')
+                        }
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error getting player active session: {e}")
+            return None
+    
+    def end_game_session(self, session_id):
+        """End a game session and remove its session code"""
+        try:
+            # Get session code first
+            session_code = self.get_session_code(session_id)
+            
+            # Get session
+            session = self.get_game_session(session_id)
+            if not session:
+                return False
+            
+            # End session using model method
+            session.end_session()
+            
+            # Save back to Firebase
+            self.save_game_session(session)
+            
+            # Remove session code
+            if session_code:
+                self.remove_session_code(session_code)
+            
+            print(f"✅ Session {session_id} ended and code removed")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error ending session: {e}")
+            return False

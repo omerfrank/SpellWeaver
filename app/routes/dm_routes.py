@@ -124,10 +124,12 @@ def delete_campaign(campaign_id):
 
 # ===== SESSION MANAGEMENT API =====
 
+
+
 @dm_bp.route('/api/session/create', methods=['POST'])
 @login_required
 def create_session():
-    """Create a new game session"""
+    """Create a new game session with session code"""
     dm_id = session.get('user_id')
     if not dm_id:
         return jsonify({"status": "error", "message": "User not logged in"}), 401
@@ -138,21 +140,52 @@ def create_session():
     if not campaign_id:
         return jsonify({"status": "error", "message": "Campaign ID is required"}), 400
     
-    # Get campaign name
+    # Get campaign info
     campaign = firebase.get_campaign(dm_id, campaign_id)
     if not campaign:
         return jsonify({"status": "error", "message": "Campaign not found"}), 404
     
     campaign_name = campaign.get('name', 'Unnamed Campaign')
     
-    # Create session
+    # Create session (this now generates a session code)
     session_id = firebase.create_game_session(dm_id, campaign_id, campaign_name)
     
     if session_id:
-        return jsonify({'status': 'success', 'session_id': session_id}), 201
+        # Get the generated session code
+        session_code = firebase.get_session_code(session_id)
+        
+        return jsonify({
+            'status': 'success',
+            'session_id': session_id,
+            'session_code': session_code  # Include session code in response
+        }), 201
     else:
         return jsonify({'status': 'error', 'message': 'Failed to create session'}), 500
 
+# NEW ROUTE: Get session code for an active session
+@dm_bp.route('/api/session/<session_id>/code', methods=['GET'])
+@login_required
+def get_session_code(session_id):
+    """Get the session code for display to players"""
+    dm_id = session.get('user_id')
+    if not dm_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    # Verify the session belongs to this DM
+    game_session = firebase.get_game_session(session_id)
+    
+    if not game_session or game_session.dm_id != dm_id:
+        return jsonify({"status": "error", "message": "Session not found or access denied"}), 404
+    
+    session_code = firebase.get_session_code(session_id)
+    
+    if session_code:
+        return jsonify({
+            'status': 'success',
+            'session_code': session_code
+        }), 200
+    else:
+        return jsonify({'status': 'error', 'message': 'Session code not found'}), 404
 @dm_bp.route('/api/session/<session_id>/players', methods=['GET'])
 @login_required
 def get_session_players(session_id):

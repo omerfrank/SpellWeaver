@@ -1,0 +1,316 @@
+/* Connect to Game specific styles */
+.top-navbar {
+    background-color: #23272a;
+    border-bottom: 1px solid #4f545c;
+    padding: 10px 0;
+}
+
+.page-header {
+    padding: 40px 0 20px;
+    text-align: center;
+}
+
+.connect-container {
+    max-width: 700px;
+    margin: 0 auto;
+    background-color: #23272a;
+    border-radius: 15px;
+    padding: 40px;
+    border: 1px solid #4f545c;
+}
+
+.section-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: #ffffff;
+    display: block;
+}
+
+/* Character Selection */
+.character-selection-section {
+    background-color: #2c2f33;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #4f545c;
+}
+
+.character-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.character-select-card {
+    background-color: #23272a;
+    border: 2px solid #4f545c;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.character-select-card:hover {
+    border-color: #7289da;
+    transform: translateY(-3px);
+}
+
+.character-select-card.selected {
+    border-color: #7289da;
+    background-color: #2c3e6b;
+    box-shadow: 0 0 20px rgba(114, 137, 218, 0.3);
+}
+
+.character-select-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    background-color: #2c2f33;
+    border: 2px solid #4f545c;
+    overflow: hidden;
+}
+
+.character-select-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.character-select-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.character-select-info {
+    font-size: 0.75rem;
+    color: #b9bbbe;
+}
+
+.character-select-checkmark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #7289da;
+    color: white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.character-select-card.selected .character-select-checkmark {
+    display: flex;
+}
+
+.character-select-card {
+    position: relative;
+}
+
+/* Game Code Input */
+.game-code-section {
+    background-color: #2c2f33;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #4f545c;
+}
+
+.game-code-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.game-code-input {
+    background-color: #23272a;
+    border: 2px solid #4f545c;
+    color: #ffffff;
+    padding: 15px;
+    font-size: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.3rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    flex: 1;
+}
+
+.game-code-input:focus {
+    background-color: #23272a;
+    border-color: #7289da;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(114, 137, 218, 0.25);
+}
+
+.game-code-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-paste {
+    background-color: #4f545c;
+    border: none;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-paste:hover {
+    background-color: #5d6168;
+}
+
+.btn-paste:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Connection Status */
+.connection-status {
+    background-color: #2c2f33;
+    border: 1px solid #4f545c;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7289da;
+}
+
+/* Buttons */
+.btn-connect {
+    background-color: #7289da;
+    border: none;
+    color: white;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-connect:hover:not(:disabled) {
+    background-color: #5b6eae;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(114, 137, 218, 0.3);
+}
+
+.btn-connect:disabled {
+    background-color: #4f545c;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-cancel {
+    background-color: #4f545c;
+    border: none;
+    color: white;
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+    background-color: #5d6168;
+}
+
+/* Help Section */
+.help-section {
+    background-color: #2c2f33;
+    border-radius: 10px;
+    padding: 30px;
+    border: 1px solid #4f545c;
+}
+
+.help-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.help-card {
+    background-color: #23272a;
+    border: 1px solid #4f545c;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.help-icon {
+    font-size: 2rem;
+    color: #7289da;
+    margin-bottom: 10px;
+}
+
+.help-card h6 {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.help-card p {
+    font-size: 0.85rem;
+    color: #b9bbbe;
+    margin: 0;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #b9bbbe;
+}
+
+/* Alert Styling */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-success {
+    background-color: rgba(87, 242, 135, 0.2);
+    color: #57f287;
+}
+
+.alert-danger {
+    background-color: rgba(201, 75, 75, 0.2);
+    color: #c94b4b;
+}
+
+.alert-info {
+    background-color: rgba(114, 137, 218, 0.2);
+    color: #7289da;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .connect-container {
+        padding: 20px;
+    }
+    
+    .character-cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+    
+    .game-code-input {
+        font-size: 1.2rem;
+        letter-spacing: 0.2rem;
+    }
+    
+    .help-cards {
+        grid-template-columns: 1fr;
+    }
+}
