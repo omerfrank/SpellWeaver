@@ -271,3 +271,19 @@ def get_character_vitals(player_id, character_id):
     except Exception as e:
         print(f"Error in get_character_vitals route: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+@dm_bp.route('/session/<session_id>/grid')
+@login_required
+def load_grid_view(session_id):
+    """Load the grid/battle map view for a specific session"""
+    dm_id = session.get('user_id')
+    if not dm_id:
+        return jsonify({"status": "error", "message": "User not logged in"}), 401
+    
+    # Verify the session belongs to this DM
+    game_session = firebase.get_game_session(session_id)
+    
+    if not game_session or game_session.dm_id != dm_id:
+        return "Session not found or access denied", 404
+    
+    # Render the grid view template
+    return render_template('dm_grid.html', session_id=session_id)
