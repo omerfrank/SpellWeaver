@@ -4,197 +4,547 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle Grid - Quest Weaver</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background-color: #2c2f33;
-            overflow: hidden;
+            box-sizing: border-box;
         }
         
-        .grid-container {
+        body {
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        #gridContainer {
+            position: relative;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
         
-        .grid-toolbar {
-            background-color: #23272a;
-            border-bottom: 2px solid #4f545c;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .grid-canvas {
-            flex: 1;
-            background-color: #2c2f33;
-            background-image: 
-                linear-gradient(#4f545c 1px, transparent 1px),
-                linear-gradient(90deg, #4f545c 1px, transparent 1px);
-            background-size: 50px 50px;
-            position: relative;
-            overflow: auto;
-        }
-        
-        .session-info {
-            color: #ffffff;
-            font-size: 0.9rem;
-        }
-        
-        .grid-controls button {
-            margin-left: 10px;
-            background-color: #c94b4b;
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .grid-controls button:hover {
-            background-color: #a83e3e;
-        }
-        
-        .map-overlay {
+        /* All layers must be identical in position and size */
+        .layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+        }
+        
+        /* Layer 0: Background Image */
+        #layer0 {
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #1a1a1a;
+        }
+        
+        /* Layer 1: Static Grid */
+        #layer1 {
+            z-index: 2;
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+        
+        /* Layer 2: Effects and Overlays */
+        #layer2 {
+            z-index: 3;
+            cursor: crosshair;
+        }
+        
+        /* HUD Overlay - doesn't interfere with layers */
+        #hud {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
             pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Courier New', monospace;
         }
         
-        .map-overlay img {
-            max-width: 90%;
-            max-height: 90%;
-            opacity: 0.8;
+        #hud .status {
+            margin: 3px 0;
         }
         
-        .loading-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #ffffff;
-            text-align: center;
+        #hud .connected {
+            color: #57f287;
         }
         
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-            border-width: 0.3rem;
+        #hud .error {
+            color: #ed4245;
+        }
+        
+        /* Keybind Help */
+        #keybindHelp {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 11px;
+            max-width: 250px;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+        
+        #keybindHelp:hover {
+            opacity: 1;
+        }
+        
+        #keybindHelp h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #c94b4b;
+        }
+        
+        #keybindHelp .keybind {
+            margin: 5px 0;
+        }
+        
+        #keybindHelp kbd {
+            background: #4f545c;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="grid-container">
-        <!-- Toolbar -->
-        <div class="grid-toolbar">
-            <div class="session-info">
-                <strong>Battle Grid</strong>
-                <span class="ms-3 text-muted">Session: <span id="sessionIdDisplay">{{ session_id }}</span></span>
-            </div>
-            <div class="grid-controls">
-                <button onclick="toggleGrid()">
-                    <i class="fas fa-border-all me-2"></i>Toggle Grid
-                </button>
-                <button onclick="clearMap()">
-                    <i class="fas fa-eraser me-2"></i>Clear Map
-                </button>
-                <button onclick="refreshGrid()">
-                    <i class="fas fa-sync me-2"></i>Refresh
-                </button>
-            </div>
-        </div>
+    <div id="gridContainer">
+        <!-- Layer 0: Background Image -->
+        <div id="layer0" class="layer"></div>
         
-        <!-- Grid Canvas -->
-        <div class="grid-canvas" id="gridCanvas">
-            <div class="loading-message" id="loadingMessage">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-3">Connecting to session...</p>
-            </div>
-            
-            <!-- Map overlay (will be populated via JS) -->
-            <div class="map-overlay" id="mapOverlay"></div>
-        </div>
+        <!-- Layer 1: Static Grid (Canvas) -->
+        <canvas id="layer1" class="layer"></canvas>
+        
+        <!-- Layer 2: Effects & Overlays (Canvas) -->
+        <canvas id="layer2" class="layer"></canvas>
+    </div>
+    
+    <!-- HUD Display -->
+    <div id="hud">
+        <div class="status">Session: <span id="sessionId">Loading...</span></div>
+        <div class="status">Grid: <span id="gridStatus">10x8</span></div>
+        <div class="status">Connection: <span id="connectionStatus" class="connected">●</span></div>
+        <div class="status">Cell: <span id="currentCell">-</span></div>
+    </div>
+    
+    <!-- Keybind Help -->
+    <div id="keybindHelp">
+        <h4>Controls</h4>
+        <div class="keybind"><kbd>Click</kbd> Toggle cell</div>
+        <div class="keybind"><kbd>C</kbd> Clear effects</div>
+        <div class="keybind"><kbd>H</kbd> Toggle background</div>
+        <div class="keybind"><kbd>M</kbd> Range mode (hold)</div>
+        <div class="keybind"><kbd>T</kbd> Ping cell</div>
+        <div class="keybind"><kbd>?</kbd> Toggle help</div>
     </div>
 
     <script>
-        // Store session ID from template
-        const SESSION_ID = "{{ session_id }}";
-        let gridVisible = true;
-        let currentMapUrl = null;
-        
-        // Initialize grid
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Grid view loaded for session:', SESSION_ID);
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            GRID_ROWS: 8,
+            GRID_COLS: 10,
+            GRID_LINE_WIDTH: 4,
+            GRID_COLOR: '#ffffff',
+            POLL_INTERVAL: 2000, // Check server every 2 seconds
+            EFFECT_OPACITY: 0.6,
+            HIGHLIGHT_COLOR: 'rgba(201, 75, 75, 0.6)',
+            RANGE_COLOR: 'rgba(114, 137, 218, 0.5)',
+            PING_COLOR: '#faa61a'
+        };
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        const STATE = {
+            sessionId: null,
+            currentMapUrl: null,
+            backgroundVisible: true,
+            rangeModeActive: false,
+            selectedCells: new Set(),
+            lastServerState: null,
+            pollingActive: true
+        };
+
+        // ============================================
+        // LAYER REFERENCES
+        // ============================================
+        const layer0 = document.getElementById('layer0');
+        const layer1 = document.getElementById('layer1');
+        const layer2 = document.getElementById('layer2');
+        const ctx1 = layer1.getContext('2d');
+        const ctx2 = layer2.getContext('2d');
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        function init() {
+            // Get session ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            STATE.sessionId = urlParams.get('session') || extractSessionFromPath();
             
-            // Simulate loading completion
-            setTimeout(() => {
-                document.getElementById('loadingMessage').style.display = 'none';
-            }, 1000);
+            if (!STATE.sessionId) {
+                console.error('No session ID found in URL');
+                updateConnectionStatus('error');
+                return;
+            }
             
-            // TODO: Set up real-time listeners for map updates from Firebase
-            // This would listen to game_state/current_map and update accordingly
+            document.getElementById('sessionId').textContent = STATE.sessionId;
             
-            // For now, just log that we're ready
-            console.log('Grid ready. Waiting for map updates...');
-        });
-        
-        function toggleGrid() {
-            gridVisible = !gridVisible;
-            const canvas = document.getElementById('gridCanvas');
+            // Set up canvas dimensions
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
             
-            if (gridVisible) {
-                canvas.style.backgroundImage = 
-                    'linear-gradient(#4f545c 1px, transparent 1px), linear-gradient(90deg, #4f545c 1px, transparent 1px)';
+            // Draw static grid (Layer 1)
+            drawGrid();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Start polling
+            startPolling();
+            
+            console.log('Grid initialized for session:', STATE.sessionId);
+        }
+
+        function extractSessionFromPath() {
+            // Extract from URL like /dm/session/{session_id}/grid
+            const pathParts = window.location.pathname.split('/');
+            const sessionIndex = pathParts.indexOf('session');
+            if (sessionIndex !== -1 && pathParts[sessionIndex + 1]) {
+                return pathParts[sessionIndex + 1];
+            }
+            return null;
+        }
+
+        function resizeCanvas() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            // Set canvas sizes
+            layer1.width = width;
+            layer1.height = height;
+            layer2.width = width;
+            layer2.height = height;
+            
+            // Redraw grid after resize
+            drawGrid();
+            
+            // Redraw effects after resize
+            redrawEffects();
+        }
+
+        // ============================================
+        // LAYER 1: STATIC GRID
+        // ============================================
+        function drawGrid() {
+            ctx1.clearRect(0, 0, layer1.width, layer1.height);
+            
+            const cellWidth = layer1.width / CONFIG.GRID_COLS;
+            const cellHeight = layer1.height / CONFIG.GRID_ROWS;
+            
+            ctx1.strokeStyle = CONFIG.GRID_COLOR;
+            ctx1.lineWidth = CONFIG.GRID_LINE_WIDTH;
+            ctx1.lineCap = 'square';
+            
+            // Draw vertical lines
+            for (let col = 0; col <= CONFIG.GRID_COLS; col++) {
+                const x = col * cellWidth;
+                ctx1.beginPath();
+                ctx1.moveTo(x, 0);
+                ctx1.lineTo(x, layer1.height);
+                ctx1.stroke();
+            }
+            
+            // Draw horizontal lines
+            for (let row = 0; row <= CONFIG.GRID_ROWS; row++) {
+                const y = row * cellHeight;
+                ctx1.beginPath();
+                ctx1.moveTo(0, y);
+                ctx1.lineTo(layer1.width, y);
+                ctx1.stroke();
+            }
+            
+            console.log('Grid drawn:', CONFIG.GRID_COLS, 'x', CONFIG.GRID_ROWS);
+        }
+
+        // ============================================
+        // LAYER 2: EFFECTS & OVERLAYS
+        // ============================================
+        function clearEffects() {
+            ctx2.clearRect(0, 0, layer2.width, layer2.height);
+            STATE.selectedCells.clear();
+            console.log('Effects cleared');
+        }
+
+        function redrawEffects() {
+            ctx2.clearRect(0, 0, layer2.width, layer2.height);
+            
+            // Redraw all selected cells
+            STATE.selectedCells.forEach(cellKey => {
+                const [row, col] = cellKey.split(',').map(Number);
+                drawCellHighlight(row, col);
+            });
+        }
+
+        function drawCellHighlight(row, col) {
+            const cellWidth = layer2.width / CONFIG.GRID_COLS;
+            const cellHeight = layer2.height / CONFIG.GRID_ROWS;
+            
+            const x = col * cellWidth;
+            const y = row * cellHeight;
+            
+            ctx2.fillStyle = CONFIG.HIGHLIGHT_COLOR;
+            ctx2.fillRect(x, y, cellWidth, cellHeight);
+        }
+
+        function drawRangeCircle(centerRow, centerCol, radiusCells) {
+            const cellWidth = layer2.width / CONFIG.GRID_COLS;
+            const cellHeight = layer2.height / CONFIG.GRID_ROWS;
+            
+            const centerX = (centerCol + 0.5) * cellWidth;
+            const centerY = (centerRow + 0.5) * cellHeight;
+            const radius = radiusCells * Math.min(cellWidth, cellHeight);
+            
+            ctx2.fillStyle = CONFIG.RANGE_COLOR;
+            ctx2.beginPath();
+            ctx2.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx2.fill();
+        }
+
+        function pingCell(row, col) {
+            const cellWidth = layer2.width / CONFIG.GRID_COLS;
+            const cellHeight = layer2.height / CONFIG.GRID_ROWS;
+            
+            const centerX = (col + 0.5) * cellWidth;
+            const centerY = (row + 0.5) * cellHeight;
+            
+            // Animate ping
+            let scale = 0;
+            const maxScale = 2;
+            const duration = 1000; // 1 second
+            const startTime = Date.now();
+            
+            function animatePing() {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+                
+                if (progress >= 1) return;
+                
+                // Clear previous frame
+                redrawEffects();
+                
+                // Draw expanding circle
+                scale = progress * maxScale;
+                const alpha = 1 - progress;
+                const radius = scale * Math.min(cellWidth, cellHeight) * 0.5;
+                
+                ctx2.strokeStyle = `rgba(250, 166, 26, ${alpha})`;
+                ctx2.lineWidth = 3;
+                ctx2.beginPath();
+                ctx2.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx2.stroke();
+                
+                requestAnimationFrame(animatePing);
+            }
+            
+            animatePing();
+        }
+
+        // ============================================
+        // MOUSE INTERACTION
+        // ============================================
+        function getCellFromMouse(event) {
+            const rect = layer2.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const cellWidth = layer2.width / CONFIG.GRID_COLS;
+            const cellHeight = layer2.height / CONFIG.GRID_ROWS;
+            
+            const col = Math.floor(x / cellWidth);
+            const row = Math.floor(y / cellHeight);
+            
+            // Validate bounds
+            if (row >= 0 && row < CONFIG.GRID_ROWS && col >= 0 && col < CONFIG.GRID_COLS) {
+                return { row, col };
+            }
+            
+            return null;
+        }
+
+        function handleClick(event) {
+            const cell = getCellFromMouse(event);
+            if (!cell) return;
+            
+            if (STATE.rangeModeActive) {
+                // Draw range circle (3 cell radius = 30ft in D&D)
+                clearEffects();
+                drawRangeCircle(cell.row, cell.col, 3);
             } else {
-                canvas.style.backgroundImage = 'none';
+                // Toggle cell highlight
+                const cellKey = `${cell.row},${cell.col}`;
+                
+                if (STATE.selectedCells.has(cellKey)) {
+                    STATE.selectedCells.delete(cellKey);
+                } else {
+                    STATE.selectedCells.add(cellKey);
+                }
+                
+                redrawEffects();
             }
         }
-        
-        function clearMap() {
-            if (confirm('Clear the current map?')) {
-                document.getElementById('mapOverlay').innerHTML = '';
-                currentMapUrl = null;
-                console.log('Map cleared');
-            }
-        }
-        
-        function refreshGrid() {
-            console.log('Refreshing grid data...');
-            // TODO: Fetch latest game state from Firebase
-            window.location.reload();
-        }
-        
-        // Function to update map when DM pushes a new one
-        function updateMap(mapUrl) {
-            currentMapUrl = mapUrl;
-            const overlay = document.getElementById('mapOverlay');
+
+        function handleMouseMove(event) {
+            const cell = getCellFromMouse(event);
             
-            if (mapUrl) {
-                overlay.innerHTML = `<img src="${mapUrl}" alt="Battle map">`;
+            if (cell) {
+                document.getElementById('currentCell').textContent = `[${cell.row}, ${cell.col}]`;
             } else {
-                overlay.innerHTML = '';
+                document.getElementById('currentCell').textContent = '-';
             }
         }
-        
-        // TODO: Set up Firebase listener for real-time map updates
-        // This would connect to Firebase and listen for changes to
-        // sessions/{SESSION_ID}/gameState/current_map
-        
-        console.log('Grid controls initialized');
+
+        // ============================================
+        // KEYBOARD CONTROLS
+        // ============================================
+        function setupEventListeners() {
+            // Mouse events
+            layer2.addEventListener('click', handleClick);
+            layer2.addEventListener('mousemove', handleMouseMove);
+            
+            // Keyboard events
+            document.addEventListener('keydown', (e) => {
+                switch(e.key.toLowerCase()) {
+                    case 'c':
+                        clearEffects();
+                        break;
+                    case 'h':
+                        toggleBackground();
+                        break;
+                    case 'm':
+                        STATE.rangeModeActive = true;
+                        layer2.style.cursor = 'cell';
+                        break;
+                    case 't':
+                        // Ping last hovered cell
+                        const cell = getCellFromMouse({ 
+                            clientX: event.clientX || window.innerWidth / 2, 
+                            clientY: event.clientY || window.innerHeight / 2 
+                        });
+                        if (cell) pingCell(cell.row, cell.col);
+                        break;
+                    case '?':
+                        toggleHelp();
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.key.toLowerCase() === 'm') {
+                    STATE.rangeModeActive = false;
+                    layer2.style.cursor = 'crosshair';
+                }
+            });
+        }
+
+        function toggleBackground() {
+            STATE.backgroundVisible = !STATE.backgroundVisible;
+            layer0.style.opacity = STATE.backgroundVisible ? '1' : '0';
+            console.log('Background visible:', STATE.backgroundVisible);
+        }
+
+        function toggleHelp() {
+            const help = document.getElementById('keybindHelp');
+            help.style.opacity = help.style.opacity === '1' ? '0.3' : '1';
+        }
+
+        // ============================================
+        // SERVER POLLING
+        // ============================================
+        function startPolling() {
+            // Initial fetch
+            fetchGameState();
+            
+            // Set up polling interval
+            setInterval(() => {
+                if (STATE.pollingActive) {
+                    fetchGameState();
+                }
+            }, CONFIG.POLL_INTERVAL);
+        }
+
+        async function fetchGameState() {
+            try {
+                // This would call your actual Flask endpoint
+                const response = await fetch(`/dm/api/session/${STATE.sessionId}/gridState`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch game state');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateGameState(data.gameState);
+                    updateConnectionStatus('connected');
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+                updateConnectionStatus('error');
+            }
+        }
+
+        function updateGameState(newState) {
+            // Check if map changed
+            if (newState.mapUrl && newState.mapUrl !== STATE.currentMapUrl) {
+                updateBackgroundImage(newState.mapUrl);
+            }
+            
+            // Check for new effects/markers
+            if (newState.effects) {
+                // Handle server-side effects
+                console.log('Server effects:', newState.effects);
+            }
+            
+            STATE.lastServerState = newState;
+        }
+
+        function updateBackgroundImage(url) {
+            STATE.currentMapUrl = url;
+            layer0.style.backgroundImage = `url('${url}')`;
+            console.log('Background updated:', url);
+        }
+
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            
+            if (status === 'connected') {
+                statusEl.className = 'connected';
+                statusEl.textContent = '●';
+            } else {
+                statusEl.className = 'error';
+                statusEl.textContent = '●';
+            }
+        }
+
+        // ============================================
+        // START APPLICATION
+        // ============================================
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
