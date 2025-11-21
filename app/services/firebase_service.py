@@ -879,3 +879,76 @@ class FirebaseService:
         except Exception as e:
             print(f"❌ Error ending session: {e}")
             return False
+    
+    # ===== GRID MANAGEMENT METHODS =====
+    def update_grid_map(self, session_id, image_url):
+        """LAYER 0: Updates the background map"""
+        try:
+            ref = db.reference(f'sessions/{session_id}/gameState/grid/map')
+            ref.set({
+                'url': image_url,
+            })
+            return True
+        except Exception as e:
+            print(f"Error updating map: {e}")
+            return False
+
+    def add_grid_effect(self, session_id, user_id, effect_type, x, y, **kwargs):
+        """LAYER 2: Adds a visual effect (marker, radius, etc.)"""
+        try:
+            ref = db.reference(f'sessions/{session_id}/gameState/grid/effects')
+            new_effect_ref = ref.push() # Generate unique ID
+            
+            effect_data = {
+                'type': effect_type, # e.g., 'radius', 'mark', 'ping'
+                'user_id': user_id,
+                'x': x,
+                'y': y,
+                'metadata': kwargs, # range, color, duration, etc.
+            }
+            
+            new_effect_ref.set(effect_data)
+            return True
+        except Exception as e:
+            print(f"Error adding effect: {e}")
+            return False
+    def clear_grid_effects(self, session_id):
+        """LAYER 2 CLEANUP: Removes all visual effects but KEEPS the map"""
+        try:
+            ref = db.reference(f'sessions/{session_id}/gameState/grid/effects')
+            ref.delete() # Efficiently wipes Layer 2
+            return True
+        except Exception as e:
+            print(f"Error clearing effects: {e}")
+            return False
+    def get_grid_effects(self, session_id):
+        """
+        Retrieves all active visual effects (Layer 2) for a specific session.
+        This is called by the server/client polling loop to render spell areas, markers, etc.
+        """
+        try:
+            # Access the specific effects node within the session's game state
+            ref = db.reference(f'sessions/{session_id}/gameState/grid/effects')
+            effects = ref.get()
+            
+            # Return an empty dict {} instead of None if the node is empty
+            # This prevents client-side errors when iterating
+            return effects if effects else {}
+            
+        except Exception as e:
+            print(f"Error getting grid effects: {e}")
+            return {}
+    def get_grid_map(self, session_id):
+        """
+        return the current map link
+        """
+        try:
+            # Access the specific effects node within the session's game state
+            ref = db.reference(f'sessions/{session_id}/gameState/grid/map')
+            map = ref.get()
+
+            return map if map else ""
+            
+        except Exception as e:
+            print(f"Error getting grid effects: {e}")
+            return {}

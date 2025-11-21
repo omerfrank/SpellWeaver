@@ -490,7 +490,7 @@
         async function fetchGameState() {
             try {
                 // This would call your actual Flask endpoint
-                const response = await fetch(`/dm/api/session/${STATE.sessionId}/gridState`);
+                const response = await fetch(`/api/grid/session/${STATE.sessionId}/gridState`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch game state');

@@ -24,22 +24,29 @@ class GameSession:
             'current_turn': None,
             'turn_order': [],
             'grid_state': {},
-            'initiative_tracker': []
+            'initiative_tracker': [],
+            'grid': {
+                'map': {
+                    'url': '',
+                },
+                'effects': {}
+            }
         }
     
     def to_dict(self) -> Dict:
         """Convert session to dictionary for Firebase storage"""
         return {
             'sessionInfo': {
-                'dm_id': self.dm_id,
-                'campaign_id': self.campaign_id,
-                'campaign_name': self.campaign_name,
-                'status': self.status,
-                'created_at': self.created_at,
-                'last_updated': self.last_updated
+            'dm_id': self.dm_id,
+            'campaign_id': self.campaign_id,
+            'campaign_name': self.campaign_name,
+            'status': self.status,
+            'created_at': self.created_at,
+            'last_updated': self.last_updated
             },
             'activePlayers': self.active_players,
-            'gameState': self.game_state
+            'gameState': self.game_state,
+            'grid': self.game_state.get('grid', {'map': {'url': ''}, 'effects': {}})
         }
     
     @classmethod
