@@ -92,13 +92,10 @@
             border-radius: 5px;
             font-size: 11px;
             max-width: 250px;
-            opacity: 0.3;
             transition: opacity 0.3s;
         }
         
-        #keybindHelp:hover {
-            opacity: 1;
-        }
+
         
         #keybindHelp h4 {
             margin: 0 0 10px 0;
@@ -469,7 +466,9 @@
 
         function toggleHelp() {
             const help = document.getElementById('keybindHelp');
-            help.style.opacity = help.style.opacity === '1' ? '0.3' : '1';
+            const hud = document.getElementById('hud');
+            help.style.display = help.style.display === 'block' ? 'none' : 'block';
+            hud.style.display = hud.style.display === 'block' ? 'none' : 'block';
         }
 
         // ============================================
