@@ -162,6 +162,8 @@
             RANGE_COLOR: 'rgba(114, 137, 218, 0.5)',
             PING_COLOR: '#faa61a'
         };
+        let cell;
+
 
         // ============================================
         // STATE MANAGEMENT
@@ -325,7 +327,6 @@
         function pingCell(row, col) {
             const cellWidth = layer2.width / CONFIG.GRID_COLS;
             const cellHeight = layer2.height / CONFIG.GRID_ROWS;
-            
             const centerX = (col + 0.5) * cellWidth;
             const centerY = (row + 0.5) * cellHeight;
             
@@ -384,7 +385,7 @@
         }
 
         function handleClick(event) {
-            const cell = getCellFromMouse(event);
+            cell = getCellFromMouse(event);
             if (!cell) return;
             
             if (STATE.rangeModeActive) {
@@ -406,7 +407,7 @@
         }
 
         function handleMouseMove(event) {
-            const cell = getCellFromMouse(event);
+            cell = getCellFromMouse(event);
             
             if (cell) {
                 document.getElementById('currentCell').textContent = `[${cell.row}, ${cell.col}]`;
@@ -438,10 +439,7 @@
                         break;
                     case 't':
                         // Ping last hovered cell
-                        const cell = getCellFromMouse({ 
-                            clientX: event.clientX || window.innerWidth / 2, 
-                            clientY: event.clientY || window.innerHeight / 2 
-                        });
+                        console.log(event.clientX)
                         if (cell) pingCell(cell.row, cell.col);
                         break;
                     case '?':
