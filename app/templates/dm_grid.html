@@ -141,6 +141,7 @@
         <h4>Controls</h4>
         <div class="keybind"><kbd>Click</kbd> Toggle cell</div>
         <div class="keybind"><kbd>C</kbd> Clear effects</div>
+        <div class="keybind"><kbd>F</kbd> Fog of War</div>
         <div class="keybind"><kbd>H</kbd> Toggle background</div>
         <div class="keybind"><kbd>M</kbd> Range mode (hold)</div>
         <div class="keybind"><kbd>T</kbd> Ping cell</div>
@@ -512,7 +513,7 @@
                         break;
                     case 'm': 
                         STATE.rangeModeActive = true;
-                        layer2.style.cursor = 'crosshair';
+                        layer2.style.cursor = 'ne-resize';
                         break;
                     case 'f':
                         STATE.fogModeActive = !STATE.fogModeActive;
