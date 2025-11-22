@@ -51,3 +51,17 @@ def update_map(session_id):
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@grid_bp.route('/session/<session_id>/clear', methods=['POST'])
+def clear_map(session_id):
+    try:
+
+        success = firebase.clear_grid_effects(session_id)
+        
+        if success:
+            return jsonify({"status": "success", "message": "effect clear"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Database update failed"}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500

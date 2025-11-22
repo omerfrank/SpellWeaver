@@ -5,32 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle Grid - Quest Weaver</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background-color: #000; font-family: Arial, sans-serif; }
         
-        body {
-            overflow: hidden;
-            background-color: #000;
-            font-family: Arial, sans-serif;
-        }
-        
-        #gridContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
+        #gridContainer { position: relative; width: 100vw; height: 100vh; }
         
         /* All layers must be identical in position and size */
-        .layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
+        .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
         /* Layer 0: Background Image */
         #layer0 {
@@ -42,93 +23,45 @@
         }
         
         /* Layer 1: Static Grid */
-        #layer1 {
-            z-index: 2;
-            pointer-events: none; /* Allow clicks to pass through */
-        }
+        #layer1 { z-index: 2; pointer-events: none; }
         
         /* Layer 2: Effects and Overlays */
-        #layer2 {
-            z-index: 3;
-            cursor: crosshair;
-        }
+        #layer2 { z-index: 3; cursor: crosshair; }
         
-        /* HUD Overlay - doesn't interfere with layers */
+        /* HUD Overlay */
         #hud {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 12px;
-            pointer-events: none;
+            position: fixed; top: 10px; left: 10px; z-index: 10;
+            background: rgba(0, 0, 0, 0.7); color: #fff;
+            padding: 10px 15px; border-radius: 5px;
+            font-size: 12px; pointer-events: none;
             font-family: 'Courier New', monospace;
         }
-        
-        #hud .status {
-            margin: 3px 0;
-        }
-        
-        #hud .connected {
-            color: #57f287;
-        }
-        
-        #hud .error {
-            color: #ed4245;
-        }
+        #hud .status { margin: 3px 0; }
+        #hud .connected { color: #57f287; }
+        #hud .error { color: #ed4245; }
         
         /* Keybind Help */
         #keybindHelp {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 11px;
-            max-width: 250px;
-            transition: opacity 0.3s;
+            position: fixed; bottom: 10px; right: 10px; z-index: 10;
+            background: rgba(0, 0, 0, 0.8); color: #fff;
+            padding: 15px; border-radius: 5px; font-size: 11px;
+            max-width: 250px; transition: opacity 0.3s;
         }
-        
-
-        
-        #keybindHelp h4 {
-            margin: 0 0 10px 0;
-            font-size: 13px;
-            color: #c94b4b;
-        }
-        
-        #keybindHelp .keybind {
-            margin: 5px 0;
-        }
-        
+        #keybindHelp h4 { margin: 0 0 10px 0; font-size: 13px; color: #c94b4b; }
+        #keybindHelp .keybind { margin: 5px 0; }
         #keybindHelp kbd {
-            background: #4f545c;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-            margin-right: 5px;
+            background: #4f545c; padding: 2px 6px;
+            border-radius: 3px; font-weight: bold; margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <div id="gridContainer">
-        <!-- Layer 0: Background Image -->
         <div id="layer0" class="layer"></div>
-        
-        <!-- Layer 1: Static Grid (Canvas) -->
         <canvas id="layer1" class="layer"></canvas>
-        
-        <!-- Layer 2: Effects & Overlays (Canvas) -->
         <canvas id="layer2" class="layer"></canvas>
     </div>
     
-    <!-- HUD Display -->
     <div id="hud">
         <div class="status">Session: <span id="sessionId">Loading...</span></div>
         <div class="status">Grid: <span id="gridStatus">10x8</span></div>
@@ -136,19 +69,17 @@
         <div class="status">Cell: <span id="currentCell">-</span></div>
     </div>
     
-    <!-- Keybind Help -->
     <div id="keybindHelp">
         <h4>Controls</h4>
-        <div class="keybind"><kbd>Click</kbd> Toggle cell</div>
-        <div class="keybind"><kbd>C</kbd> Clear effects</div>
-        <div class="keybind"><kbd>F</kbd> Fog of War</div>
-        <div class="keybind"><kbd>H</kbd> Toggle background</div>
-        <div class="keybind"><kbd>M</kbd> Range mode (hold)</div>
-        <div class="keybind"><kbd>T</kbd> Ping cell</div>
-        <div class="keybind"><kbd>?</kbd> Toggle help</div>
+        <div class="keybind"><kbd>Click+Drag</kbd> Paint/Select</div>
+        <div class="keybind"><kbd>F</kbd> Toggle Fog Mode</div>
+        <div class="keybind"><kbd>C</kbd> Clear All</div>
+        <div class="keybind"><kbd>H</kbd> Toggle Background</div>
+        <div class="keybind"><kbd>M</kbd> Measure (Hold)</div>
+        <div class="keybind"><kbd>T</kbd> Ping Location</div>
     </div>
 
-<script>
+    <script>
         // ============================================
         // CONFIGURATION
         // ============================================
@@ -162,10 +93,8 @@
             HIGHLIGHT_COLOR: 'rgba(201, 75, 75, 0.6)',
             RANGE_COLOR: 'rgba(114, 137, 218, 0.5)',
             PING_COLOR: '#faa61a',
-            // Fallback color if image fails to load
-            FOG_COLOR: 'rgba(20, 20, 20, 0.95)', 
-            // PATH TO YOUR FOG TEXTURE
-            FOG_TEXTURE_URL: '/static/img/fog.webp' 
+            FOG_COLOR: 'rgba(20, 20, 20, 0.95)',
+            FOG_TEXTURE_URL: '/static/img/fog.webp'
         };
         let cell; 
 
@@ -184,6 +113,7 @@
             // Data Sets
             selectedCells: new Set(),
             foggedCells: new Set(),
+            serverEffects: {}, // NEW: Store effects from server
             
             lastServerState: null,
             pollingActive: true,
@@ -194,7 +124,7 @@
             paintMode: true,
             
             // Assets
-            fogPattern: null, // Will hold the texture pattern
+            fogPattern: null, 
             fogImageLoaded: false
         };
 
@@ -222,9 +152,7 @@
             
             document.getElementById('sessionId').textContent = STATE.sessionId;
             
-            // Load the Fog Texture
             loadFogTexture();
-
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
@@ -239,16 +167,11 @@
             const img = new Image();
             img.src = CONFIG.FOG_TEXTURE_URL;
             img.onload = () => {
-                console.log("Fog texture loaded successfully");
-                // Create a repeating pattern from the image
                 STATE.fogPattern = ctx2.createPattern(img, 'repeat');
                 STATE.fogImageLoaded = true;
-                redrawEffects(); // Redraw immediately to show texture
+                redrawEffects(); 
             };
-            img.onerror = () => {
-                console.warn("Failed to load fog texture, falling back to solid color");
-                STATE.fogImageLoaded = false;
-            };
+            img.onerror = () => STATE.fogImageLoaded = false;
         }
 
         function extractSessionFromPath() {
@@ -263,21 +186,16 @@
         function resizeCanvas() {
             const width = window.innerWidth;
             const height = window.innerHeight;
-            
             layer1.width = width;
             layer1.height = height;
             layer2.width = width;
             layer2.height = height;
             
-            // Re-create pattern on resize if needed (usually pattern persists, but context might reset)
             if (STATE.fogImageLoaded) {
                 const img = new Image();
                 img.src = CONFIG.FOG_TEXTURE_URL;
-                // We reload to ensure the pattern scales correctly if needed, 
-                // though simple createPattern is usually fine.
                 STATE.fogPattern = ctx2.createPattern(img, 'repeat');
             }
-
             drawGrid();
             redrawEffects();
         }
@@ -295,51 +213,74 @@
             ctx1.lineWidth = CONFIG.GRID_LINE_WIDTH;
             ctx1.lineCap = 'square';
             
+            // Draw Verticals
             for (let col = 0; col <= CONFIG.GRID_COLS; col++) {
                 const x = col * cellWidth;
-                ctx1.beginPath();
-                ctx1.moveTo(x, 0);
-                ctx1.lineTo(x, layer1.height);
-                ctx1.stroke();
+                ctx1.beginPath(); ctx1.moveTo(x, 0); ctx1.lineTo(x, layer1.height); ctx1.stroke();
             }
-            
+            // Draw Horizontals
             for (let row = 0; row <= CONFIG.GRID_ROWS; row++) {
                 const y = row * cellHeight;
-                ctx1.beginPath();
-                ctx1.moveTo(0, y);
-                ctx1.lineTo(layer1.width, y);
-                ctx1.stroke();
+                ctx1.beginPath(); ctx1.moveTo(0, y); ctx1.lineTo(layer1.width, y); ctx1.stroke();
             }
         }
 
         // ============================================
         // LAYER 2: EFFECTS & OVERLAYS
         // ============================================
-        function clearEffects() {
+        async function clearEffects() {
+            // 1. Clear Locally (Immediate visual feedback)
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             STATE.selectedCells.clear();
             STATE.foggedCells.clear();
+            STATE.serverEffects = {}; // Clear stored server effects
+            
+            // 2. Clear on Server
+            try {
+                console.log("Clearing effects on server...");
+                // Use STATE.sessionId instead of hardcoded ID to make it work for any session
+                const response = await fetch(`/api/grid/session/${STATE.sessionId}/clear`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    console.log("Server cleared successfully");
+                } else {
+                    console.error("Server clear failed:", result.message);
+                }
+            } catch (error) {
+                console.error("Network error clearing server:", error);
+            }
         }
 
         function redrawEffects() {
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             
-            // 1. Draw Fog (Bottom Layer)
-            // We determine the fill style once
+            // 1. SERVER EFFECTS (Draw first so they are below UI interactions)
+            if (STATE.serverEffects) {
+                Object.values(STATE.serverEffects).forEach(effect => {
+                    if (effect.type === 'radius' && effect.metadata) {
+                        // Draw Server Radius
+                        // Effect X/Y are grid coordinates (col, row)
+                        drawServerCircle(effect.y, effect.x, effect.metadata.range, effect.metadata.color);
+                    }
+                });
+            }
+
+            // 2. FOG (Bottom Layer)
             if (STATE.fogImageLoaded && STATE.fogPattern) {
                 ctx2.fillStyle = STATE.fogPattern;
             } else {
                 ctx2.fillStyle = CONFIG.FOG_COLOR;
             }
-
             STATE.foggedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
-                // We don't pass color anymore, we use the context's current fillStyle
                 drawCellRect(row, col); 
             });
 
-            // 2. Draw Selection Highlights (Top Layer)
-            ctx2.fillStyle = CONFIG.HIGHLIGHT_COLOR; // Reset to red for highlights
+            // 3. SELECTIONS (Top Layer)
+            ctx2.fillStyle = CONFIG.HIGHLIGHT_COLOR; 
             STATE.selectedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
                 drawCellRect(row, col);
@@ -349,30 +290,32 @@
         function drawCellRect(row, col) {
             const cellWidth = layer2.width / CONFIG.GRID_COLS;
             const cellHeight = layer2.height / CONFIG.GRID_ROWS;
-            
             const x = col * cellWidth;
             const y = row * cellHeight;
-            
-            // Note: fillRect uses the current ctx2.fillStyle
             ctx2.fillRect(x, y, cellWidth, cellHeight);
         }
 
-        function drawRangeCircle(centerRow, centerCol, radiusCells) {
+        function drawServerCircle(centerRow, centerCol, radiusCells, color) {
             const cellWidth = layer2.width / CONFIG.GRID_COLS;
             const cellHeight = layer2.height / CONFIG.GRID_ROWS;
             
             const centerX = (centerCol + 0.5) * cellWidth;
             const centerY = (centerRow + 0.5) * cellHeight;
-            const radius = radiusCells * Math.min(cellWidth, cellHeight);
+            const radius = radiusCells * Math.min(cellWidth, cellHeight); // Simplified radius logic
             
-            ctx2.fillStyle = CONFIG.RANGE_COLOR;
+            ctx2.fillStyle = color || CONFIG.RANGE_COLOR;
             ctx2.beginPath();
             ctx2.arc(centerX, centerY, radius, 0, Math.PI * 2);
             ctx2.fill();
             
-            ctx2.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx2.strokeStyle = "rgba(255, 255, 255, 0.6)";
             ctx2.lineWidth = 2;
             ctx2.stroke();
+        }
+
+        function drawRangeCircle(centerRow, centerCol, radiusCells) {
+            // Wrapper for client-side measuring
+            drawServerCircle(centerRow, centerCol, radiusCells, CONFIG.RANGE_COLOR);
         }
 
         function pingCell(row, col) {
@@ -409,7 +352,6 @@
                 
                 requestAnimationFrame(animatePing);
             }
-            
             animatePing();
         }
 
@@ -434,11 +376,8 @@
         }
 
         function updateSet(targetSet, key, shouldAdd) {
-            if (shouldAdd) {
-                targetSet.add(key);
-            } else {
-                targetSet.delete(key);
-            }
+            if (shouldAdd) targetSet.add(key);
+            else targetSet.delete(key);
         }
 
         function handleMouseDown(event) {
@@ -468,11 +407,8 @@
         function handleMouseMove(event) {
             cell = getCellFromMouse(event);
             
-            if (cell) {
-                document.getElementById('currentCell').textContent = `[${cell.row}, ${cell.col}]`;
-            } else {
-                document.getElementById('currentCell').textContent = '-';
-            }
+            if (cell) document.getElementById('currentCell').textContent = `[${cell.row}, ${cell.col}]`;
+            else document.getElementById('currentCell').textContent = '-';
 
             if (STATE.isDragging && cell) {
                 if (STATE.rangeModeActive && STATE.dragStart) {
@@ -485,10 +421,27 @@
                 } else if (!STATE.rangeModeActive) {
                     const cellKey = `${cell.row},${cell.col}`;
                     const targetSet = STATE.fogModeActive ? STATE.foggedCells : STATE.selectedCells;
-                    
                     updateSet(targetSet, cellKey, STATE.paintMode);
                     redrawEffects();
                 }
+            }
+        }
+
+        // ============================================
+        // HELPER: Trigger Test Effect
+        // ============================================
+        async function triggerTestEffect() {
+            console.log("Triggering test effect...");
+            try {
+                const response = await fetch(`/api/grid/session/${STATE.sessionId}/testgrid`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                console.log("Test Trigger Result:", result);
+                // Note: We don't update UI here directly. 
+                // We wait for the Polling Loop to catch the new state from Firebase.
+            } catch (error) {
+                console.error("Failed to trigger test:", error);
             }
         }
 
@@ -505,29 +458,25 @@
                 if (e.repeat) return;
 
                 switch(e.key.toLowerCase()) {
-                    case 'c': 
-                        clearEffects(); 
-                        break;
-                    case 'h': 
-                        toggleBackground(); 
-                        break;
+                    case 'c': clearEffects(); break;
+                    case 'h': toggleBackground(); break;
                     case 'm': 
                         STATE.rangeModeActive = true;
                         layer2.style.cursor = 'ne-resize';
                         break;
                     case 'f':
                         STATE.fogModeActive = !STATE.fogModeActive;
-                        console.log("Fog Mode:", STATE.fogModeActive);
                         layer2.style.cursor = STATE.fogModeActive ? 'not-allowed' : 'crosshair';
-                        document.getElementById('gridStatus').textContent = STATE.fogModeActive ? "FOG MODE" : "10x8";
-                        document.getElementById('gridStatus').style.color = STATE.fogModeActive ? "#faa61a" : "inherit";
+                        const statusEl = document.getElementById('gridStatus');
+                        statusEl.textContent = STATE.fogModeActive ? "FOG MODE" : "10x8";
+                        statusEl.style.color = STATE.fogModeActive ? "#faa61a" : "inherit";
                         break;
                     case 't': 
-                        if (cell) pingCell(cell.row, cell.col);
+                        // Shift + T = Server Test, T = Local Ping
+                        if (e.shiftKey) triggerTestEffect();
+                        else if (cell) pingCell(cell.row, cell.col);
                         break;
-                    case '?': 
-                        toggleHelp(); 
-                        break;
+                    case '?': toggleHelp(); break;
                 }
             });
             
@@ -584,6 +533,14 @@
             if (newUrlString && newUrlString !== STATE.currentMapUrl) {
                 updateBackgroundImage(newUrlString);
             }
+
+            if (newState.effects) {
+                STATE.serverEffects = newState.effects;
+                redrawEffects(); 
+            } else {
+                STATE.serverEffects = {}; 
+            }
+
             STATE.lastServerState = newState;
         }
 
@@ -602,6 +559,5 @@
         // ============================================
         window.addEventListener('DOMContentLoaded', init);
     </script>
-
 </body>
 </html>
