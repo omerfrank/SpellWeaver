@@ -160,9 +160,13 @@
             EFFECT_OPACITY: 0.6,
             HIGHLIGHT_COLOR: 'rgba(201, 75, 75, 0.6)',
             RANGE_COLOR: 'rgba(114, 137, 218, 0.5)',
-            PING_COLOR: '#faa61a'
+            PING_COLOR: '#faa61a',
+            // Fallback color if image fails to load
+            FOG_COLOR: 'rgba(20, 20, 20, 0.95)', 
+            // PATH TO YOUR FOG TEXTURE
+            FOG_TEXTURE_URL: '/static/img/fog.webp' 
         };
-        let cell; // Tracks current hover cell
+        let cell; 
 
         // ============================================
         // STATE MANAGEMENT
@@ -171,15 +175,26 @@
             sessionId: null,
             currentMapUrl: null,
             backgroundVisible: true,
+            
+            // Modes
             rangeModeActive: false,
+            fogModeActive: false,
+            
+            // Data Sets
             selectedCells: new Set(),
+            foggedCells: new Set(),
+            
             lastServerState: null,
             pollingActive: true,
             
-            // Dragging State
+            // Interaction State
             isDragging: false,
-            dragStart: null,      // For Range Mode (Start Center)
-            selectionMode: true   // For Normal Mode (true=Select, false=Deselect)
+            dragStart: null,      
+            paintMode: true,
+            
+            // Assets
+            fogPattern: null, // Will hold the texture pattern
+            fogImageLoaded: false
         };
 
         // ============================================
@@ -206,6 +221,9 @@
             
             document.getElementById('sessionId').textContent = STATE.sessionId;
             
+            // Load the Fog Texture
+            loadFogTexture();
+
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
@@ -214,6 +232,22 @@
             startPolling();
             
             console.log('Grid initialized for session:', STATE.sessionId);
+        }
+
+        function loadFogTexture() {
+            const img = new Image();
+            img.src = CONFIG.FOG_TEXTURE_URL;
+            img.onload = () => {
+                console.log("Fog texture loaded successfully");
+                // Create a repeating pattern from the image
+                STATE.fogPattern = ctx2.createPattern(img, 'repeat');
+                STATE.fogImageLoaded = true;
+                redrawEffects(); // Redraw immediately to show texture
+            };
+            img.onerror = () => {
+                console.warn("Failed to load fog texture, falling back to solid color");
+                STATE.fogImageLoaded = false;
+            };
         }
 
         function extractSessionFromPath() {
@@ -234,6 +268,15 @@
             layer2.width = width;
             layer2.height = height;
             
+            // Re-create pattern on resize if needed (usually pattern persists, but context might reset)
+            if (STATE.fogImageLoaded) {
+                const img = new Image();
+                img.src = CONFIG.FOG_TEXTURE_URL;
+                // We reload to ensure the pattern scales correctly if needed, 
+                // though simple createPattern is usually fine.
+                STATE.fogPattern = ctx2.createPattern(img, 'repeat');
+            }
+
             drawGrid();
             redrawEffects();
         }
@@ -274,26 +317,42 @@
         function clearEffects() {
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             STATE.selectedCells.clear();
+            STATE.foggedCells.clear();
         }
 
         function redrawEffects() {
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             
-            // Redraw Highlighted Cells
+            // 1. Draw Fog (Bottom Layer)
+            // We determine the fill style once
+            if (STATE.fogImageLoaded && STATE.fogPattern) {
+                ctx2.fillStyle = STATE.fogPattern;
+            } else {
+                ctx2.fillStyle = CONFIG.FOG_COLOR;
+            }
+
+            STATE.foggedCells.forEach(cellKey => {
+                const [row, col] = cellKey.split(',').map(Number);
+                // We don't pass color anymore, we use the context's current fillStyle
+                drawCellRect(row, col); 
+            });
+
+            // 2. Draw Selection Highlights (Top Layer)
+            ctx2.fillStyle = CONFIG.HIGHLIGHT_COLOR; // Reset to red for highlights
             STATE.selectedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
-                drawCellHighlight(row, col);
+                drawCellRect(row, col);
             });
         }
 
-        function drawCellHighlight(row, col) {
+        function drawCellRect(row, col) {
             const cellWidth = layer2.width / CONFIG.GRID_COLS;
             const cellHeight = layer2.height / CONFIG.GRID_ROWS;
             
             const x = col * cellWidth;
             const y = row * cellHeight;
             
-            ctx2.fillStyle = CONFIG.HIGHLIGHT_COLOR;
+            // Note: fillRect uses the current ctx2.fillStyle
             ctx2.fillRect(x, y, cellWidth, cellHeight);
         }
 
@@ -373,15 +432,12 @@
             return null;
         }
 
-        // Helper to toggle a specific cell on/off
-        function updateCellSelection(row, col, shouldSelect) {
-            const cellKey = `${row},${col}`;
-            if (shouldSelect) {
-                STATE.selectedCells.add(cellKey);
+        function updateSet(targetSet, key, shouldAdd) {
+            if (shouldAdd) {
+                targetSet.add(key);
             } else {
-                STATE.selectedCells.delete(cellKey);
+                targetSet.delete(key);
             }
-            redrawEffects();
         }
 
         function handleMouseDown(event) {
@@ -391,19 +447,15 @@
             STATE.isDragging = true;
 
             if (STATE.rangeModeActive) {
-                // --- RANGE MODE ---
                 STATE.dragStart = startCell;
             } else {
-                // --- NORMAL SELECT MODE (PAINT) ---
                 const cellKey = `${startCell.row},${startCell.col}`;
+                const targetSet = STATE.fogModeActive ? STATE.foggedCells : STATE.selectedCells;
+                const isPresent = targetSet.has(cellKey);
+                STATE.paintMode = !isPresent; 
                 
-                // Logic: If I click an active cell, I want to erase.
-                // If I click an empty cell, I want to add.
-                const isAlreadySelected = STATE.selectedCells.has(cellKey);
-                STATE.selectionMode = !isAlreadySelected; // Set mode for this drag session
-                
-                // Apply immediately to the first cell
-                updateCellSelection(startCell.row, startCell.col, STATE.selectionMode);
+                updateSet(targetSet, cellKey, STATE.paintMode);
+                redrawEffects();
             }
         }
 
@@ -415,18 +467,14 @@
         function handleMouseMove(event) {
             cell = getCellFromMouse(event);
             
-            // Update HUD
             if (cell) {
                 document.getElementById('currentCell').textContent = `[${cell.row}, ${cell.col}]`;
             } else {
                 document.getElementById('currentCell').textContent = '-';
             }
 
-            // Handle Dragging Logic
             if (STATE.isDragging && cell) {
-                
                 if (STATE.rangeModeActive && STATE.dragStart) {
-                    // Range Mode: Draw Circle
                     const dx = cell.col - STATE.dragStart.col;
                     const dy = cell.row - STATE.dragStart.row;
                     const radius = Math.sqrt(dx * dx + dy * dy);
@@ -434,9 +482,11 @@
                     drawRangeCircle(STATE.dragStart.row, STATE.dragStart.col, radius);
 
                 } else if (!STATE.rangeModeActive) {
-                    // Normal Mode: Paint Selection
-                    // Apply the mode (Select vs Deselect) determined in MouseDown
-                    updateCellSelection(cell.row, cell.col, STATE.selectionMode);
+                    const cellKey = `${cell.row},${cell.col}`;
+                    const targetSet = STATE.fogModeActive ? STATE.foggedCells : STATE.selectedCells;
+                    
+                    updateSet(targetSet, cellKey, STATE.paintMode);
+                    redrawEffects();
                 }
             }
         }
@@ -445,35 +495,46 @@
         // EVENT LISTENERS
         // ============================================
         function setupEventListeners() {
-            // Use MouseDown/Move/Up instead of Click for dragging support
             layer2.addEventListener('mousedown', handleMouseDown);
             layer2.addEventListener('mousemove', handleMouseMove);
             layer2.addEventListener('mouseup', handleMouseUp);
-            // Safety: Stop dragging if mouse leaves window
             layer2.addEventListener('mouseleave', handleMouseUp);
             
             document.addEventListener('keydown', (e) => {
                 if (e.repeat) return;
 
                 switch(e.key.toLowerCase()) {
-                    case 'c': clearEffects(); break;
-                    case 'h': toggleBackground(); break;
+                    case 'c': 
+                        clearEffects(); 
+                        break;
+                    case 'h': 
+                        toggleBackground(); 
+                        break;
                     case 'm': 
                         STATE.rangeModeActive = true;
                         layer2.style.cursor = 'crosshair';
                         break;
+                    case 'f':
+                        STATE.fogModeActive = !STATE.fogModeActive;
+                        console.log("Fog Mode:", STATE.fogModeActive);
+                        layer2.style.cursor = STATE.fogModeActive ? 'not-allowed' : 'crosshair';
+                        document.getElementById('gridStatus').textContent = STATE.fogModeActive ? "FOG MODE" : "10x8";
+                        document.getElementById('gridStatus').style.color = STATE.fogModeActive ? "#faa61a" : "inherit";
+                        break;
                     case 't': 
                         if (cell) pingCell(cell.row, cell.col);
                         break;
-                    case '?': toggleHelp(); break;
+                    case '?': 
+                        toggleHelp(); 
+                        break;
                 }
             });
             
             document.addEventListener('keyup', (e) => {
                 if (e.key.toLowerCase() === 'm') {
                     STATE.rangeModeActive = false;
-                    layer2.style.cursor = 'crosshair';
-                    handleMouseUp(); // Cleanup drag if key released mid-drag
+                    layer2.style.cursor = STATE.fogModeActive ? 'not-allowed' : 'crosshair';
+                    handleMouseUp();
                 }
             });
         }
@@ -518,7 +579,6 @@
         }
 
         function updateGameState(newState) {
-            // Handle map image update
             const newUrlString = newState.mapUrl?.url || newState.mapUrl;
             if (newUrlString && newUrlString !== STATE.currentMapUrl) {
                 updateBackgroundImage(newUrlString);
@@ -541,5 +601,6 @@
         // ============================================
         window.addEventListener('DOMContentLoaded', init);
     </script>
+
 </body>
 </html>
