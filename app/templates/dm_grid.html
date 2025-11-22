@@ -156,14 +156,13 @@
             GRID_COLS: 10,
             GRID_LINE_WIDTH: 4,
             GRID_COLOR: '#ffffff',
-            POLL_INTERVAL: 2000, // Check server every 2 seconds
+            POLL_INTERVAL: 2000,
             EFFECT_OPACITY: 0.6,
             HIGHLIGHT_COLOR: 'rgba(201, 75, 75, 0.6)',
             RANGE_COLOR: 'rgba(114, 137, 218, 0.5)',
             PING_COLOR: '#faa61a'
         };
         let cell;
-
 
         // ============================================
         // STATE MANAGEMENT
@@ -175,7 +174,10 @@
             rangeModeActive: false,
             selectedCells: new Set(),
             lastServerState: null,
-            pollingActive: true
+            pollingActive: true,
+            // NEW: Dragging state for Range Mode
+            dragStart: null,
+            isDragging: false
         };
 
         // ============================================
@@ -191,7 +193,6 @@
         // INITIALIZATION
         // ============================================
         function init() {
-            // Get session ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             STATE.sessionId = urlParams.get('session') || extractSessionFromPath();
             
@@ -203,24 +204,17 @@
             
             document.getElementById('sessionId').textContent = STATE.sessionId;
             
-            // Set up canvas dimensions
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             
-            // Draw static grid (Layer 1)
             drawGrid();
-            
-            // Set up event listeners
             setupEventListeners();
-            
-            // Start polling
             startPolling();
             
             console.log('Grid initialized for session:', STATE.sessionId);
         }
 
         function extractSessionFromPath() {
-            // Extract from URL like /dm/session/{session_id}/grid
             const pathParts = window.location.pathname.split('/');
             const sessionIndex = pathParts.indexOf('session');
             if (sessionIndex !== -1 && pathParts[sessionIndex + 1]) {
@@ -233,16 +227,12 @@
             const width = window.innerWidth;
             const height = window.innerHeight;
             
-            // Set canvas sizes
             layer1.width = width;
             layer1.height = height;
             layer2.width = width;
             layer2.height = height;
             
-            // Redraw grid after resize
             drawGrid();
-            
-            // Redraw effects after resize
             redrawEffects();
         }
 
@@ -259,7 +249,6 @@
             ctx1.lineWidth = CONFIG.GRID_LINE_WIDTH;
             ctx1.lineCap = 'square';
             
-            // Draw vertical lines
             for (let col = 0; col <= CONFIG.GRID_COLS; col++) {
                 const x = col * cellWidth;
                 ctx1.beginPath();
@@ -268,7 +257,6 @@
                 ctx1.stroke();
             }
             
-            // Draw horizontal lines
             for (let row = 0; row <= CONFIG.GRID_ROWS; row++) {
                 const y = row * cellHeight;
                 ctx1.beginPath();
@@ -276,8 +264,6 @@
                 ctx1.lineTo(layer1.width, y);
                 ctx1.stroke();
             }
-            
-            console.log('Grid drawn:', CONFIG.GRID_COLS, 'x', CONFIG.GRID_ROWS);
         }
 
         // ============================================
@@ -286,13 +272,13 @@
         function clearEffects() {
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             STATE.selectedCells.clear();
-            console.log('Effects cleared');
         }
 
         function redrawEffects() {
+            // 1. Clear canvas
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             
-            // Redraw all selected cells
+            // 2. Redraw Highlighted Cells
             STATE.selectedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
                 drawCellHighlight(row, col);
@@ -316,12 +302,18 @@
             
             const centerX = (centerCol + 0.5) * cellWidth;
             const centerY = (centerRow + 0.5) * cellHeight;
+            // Calculate radius based on the average cell size for better visuals
             const radius = radiusCells * Math.min(cellWidth, cellHeight);
             
             ctx2.fillStyle = CONFIG.RANGE_COLOR;
             ctx2.beginPath();
             ctx2.arc(centerX, centerY, radius, 0, Math.PI * 2);
             ctx2.fill();
+            
+            // Optional: Add border to circle
+            ctx2.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx2.lineWidth = 2;
+            ctx2.stroke();
         }
 
         function pingCell(row, col) {
@@ -330,22 +322,29 @@
             const centerX = (col + 0.5) * cellWidth;
             const centerY = (row + 0.5) * cellHeight;
             
-            // Animate ping
             let scale = 0;
             const maxScale = 2;
-            const duration = 1000; // 1 second
+            const duration = 1000;
             const startTime = Date.now();
             
             function animatePing() {
                 const elapsed = Date.now() - startTime;
                 const progress = elapsed / duration;
                 
-                if (progress >= 1) return;
+                if (progress >= 1) {
+                    // On finish, ensure we redraw static effects (highlights/circles)
+                    // so the ping clearing doesn't leave a hole
+                    redrawEffects(); 
+                    return;
+                }
                 
-                // Clear previous frame
+                // We only want to clear/redraw for the ping animation
+                // But since it's same canvas, we must redraw everything
                 redrawEffects();
                 
-                // Draw expanding circle
+                // If we have a drag circle active, redraw it too (tricky with animation loop)
+                // Simplified: Ping might briefly clear circle during animation in this simple version.
+                
                 scale = progress * maxScale;
                 const alpha = 1 - progress;
                 const radius = scale * Math.min(cellWidth, cellHeight) * 0.5;
@@ -376,24 +375,39 @@
             const col = Math.floor(x / cellWidth);
             const row = Math.floor(y / cellHeight);
             
-            // Validate bounds
             if (row >= 0 && row < CONFIG.GRID_ROWS && col >= 0 && col < CONFIG.GRID_COLS) {
                 return { row, col };
             }
-            
             return null;
+        }
+
+        // NEW: Handle Mouse Down (Start Drag)
+        function handleMouseDown(event) {
+            if (!STATE.rangeModeActive) return;
+            
+            const startCell = getCellFromMouse(event);
+            if (startCell) {
+                STATE.isDragging = true;
+                STATE.dragStart = startCell;
+            }
+        }
+
+        // NEW: Handle Mouse Up (End Drag)
+        function handleMouseUp(event) {
+            if (STATE.isDragging) {
+                STATE.isDragging = false;
+                STATE.dragStart = null;
+                // Circle remains drawn on canvas until 'C' is pressed or other updates occur
+            }
         }
 
         function handleClick(event) {
             cell = getCellFromMouse(event);
             if (!cell) return;
             
-            if (STATE.rangeModeActive) {
-                // Draw range circle (3 cell radius = 30ft in D&D)
-                clearEffects();
-                drawRangeCircle(cell.row, cell.col, 3);
-            } else {
-                // Toggle cell highlight
+            // MODIFIED: If Range Mode is active, ignore click (handled by drag)
+            // Only toggle cells if NOT in range mode
+            if (!STATE.rangeModeActive) {
                 const cellKey = `${cell.row},${cell.col}`;
                 
                 if (STATE.selectedCells.has(cellKey)) {
@@ -414,6 +428,21 @@
             } else {
                 document.getElementById('currentCell').textContent = '-';
             }
+
+            // NEW: Dragging Logic
+            if (STATE.rangeModeActive && STATE.isDragging && STATE.dragStart && cell) {
+                // Calculate distance (Radius) using Euclidean distance
+                const dx = cell.col - STATE.dragStart.col;
+                const dy = cell.row - STATE.dragStart.row;
+                const radius = Math.sqrt(dx * dx + dy * dy);
+
+                // Clear and Redraw to show dynamic update
+                // 1. Clear and redraw highlights (so we don't lose them)
+                redrawEffects(); 
+                
+                // 2. Draw the circle on top
+                drawRangeCircle(STATE.dragStart.row, STATE.dragStart.col, radius);
+            }
         }
 
         // ============================================
@@ -423,9 +452,15 @@
             // Mouse events
             layer2.addEventListener('click', handleClick);
             layer2.addEventListener('mousemove', handleMouseMove);
+            // NEW: Listeners for drag interaction
+            layer2.addEventListener('mousedown', handleMouseDown);
+            layer2.addEventListener('mouseup', handleMouseUp);
             
             // Keyboard events
             document.addEventListener('keydown', (e) => {
+                // Ignore repeats (holding key down)
+                if (e.repeat) return;
+
                 switch(e.key.toLowerCase()) {
                     case 'c':
                         clearEffects();
@@ -435,11 +470,9 @@
                         break;
                     case 'm':
                         STATE.rangeModeActive = true;
-                        layer2.style.cursor = 'cell';
+                        layer2.style.cursor = 'crosshair'; // Optional: change cursor
                         break;
                     case 't':
-                        // Ping last hovered cell
-                        console.log(event.clientX)
                         if (cell) pingCell(cell.row, cell.col);
                         break;
                     case '?':
@@ -452,6 +485,12 @@
                 if (e.key.toLowerCase() === 'm') {
                     STATE.rangeModeActive = false;
                     layer2.style.cursor = 'crosshair';
+                    
+                    // Safety cleanup if they release M while dragging
+                    if (STATE.isDragging) {
+                        STATE.isDragging = false;
+                        STATE.dragStart = null;
+                    }
                 }
             });
         }
@@ -459,7 +498,6 @@
         function toggleBackground() {
             STATE.backgroundVisible = !STATE.backgroundVisible;
             layer0.style.opacity = STATE.backgroundVisible ? '1' : '0';
-            console.log('Background visible:', STATE.backgroundVisible);
         }
 
         function toggleHelp() {
@@ -473,10 +511,7 @@
         // SERVER POLLING
         // ============================================
         function startPolling() {
-            // Initial fetch
             fetchGameState();
-            
-            // Set up polling interval
             setInterval(() => {
                 if (STATE.pollingActive) {
                     fetchGameState();
@@ -486,15 +521,9 @@
 
         async function fetchGameState() {
             try {
-                // This would call your actual Flask endpoint
                 const response = await fetch(`/api/grid/session/${STATE.sessionId}/gridState`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch game state');
-                }
-                
+                if (!response.ok) throw new Error('Failed to fetch game state');
                 const data = await response.json();
-                
                 if (data.status === 'success') {
                     updateGameState(data.gameState);
                     updateConnectionStatus('connected');
@@ -506,35 +535,23 @@
         }
 
         function updateGameState(newState) {
-            // Check if map changed
             if (newState.mapUrl && newState.mapUrl !== STATE.currentMapUrl) {
                 updateBackgroundImage(newState.mapUrl);
             }
-            
-            // Check for new effects/markers
-            if (newState.effects) {
-                // Handle server-side effects
-                console.log('Server effects:', newState.effects);
-            }
-            
             STATE.lastServerState = newState;
         }
 
         function updateBackgroundImage(url) {
             STATE.currentMapUrl = url;
             layer0.style.backgroundImage = `url('${url}')`;
-            console.log('Background updated:', url);
         }
 
         function updateConnectionStatus(status) {
             const statusEl = document.getElementById('connectionStatus');
-            
             if (status === 'connected') {
                 statusEl.className = 'connected';
-                statusEl.textContent = '●';
             } else {
                 statusEl.className = 'error';
-                statusEl.textContent = '●';
             }
         }
 

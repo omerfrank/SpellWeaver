@@ -6,10 +6,24 @@ grid_bp = Blueprint('grid', __name__, template_folder='../templates',static_fold
 firebase = FirebaseService()
 
 
-@grid_bp.route('/test')
-def test():
-    return {"message": "test works!"}
-# :5000/dm/api/session/-OeXHWkk5uXy2HJtJGsj/gridState:1
+@grid_bp.route('/session/<session_id>/testgrid', methods=['POST', 'GET'])
+def test_grid_effect(session_id):
+    """Test route to add a 2-cell radius circle at 0,0"""
+    success = firebase.add_grid_effect(
+        session_id=session_id,
+        user_id='system_test',
+        effect_type='radius',
+        x=0,
+        y=0,
+        range=2,          # This sets the radius
+        color='#FF0000'   # Red color for visibility
+    )
+    
+    if success:
+        return jsonify({"status": "success", "message": "Test circle added at 0,0"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Failed to add effect"}), 500
+    
 @grid_bp.route('/session/<session_id>/gridState')
 def update_grid(session_id):
     upd = firebase.get_grid_effects(session_id)
