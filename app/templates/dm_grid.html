@@ -524,7 +524,9 @@
                 const response = await fetch(`/api/grid/session/${STATE.sessionId}/gridState`);
                 if (!response.ok) throw new Error('Failed to fetch game state');
                 const data = await response.json();
+
                 if (data.status === 'success') {
+                    console.log("state")
                     updateGameState(data.gameState);
                     updateConnectionStatus('connected');
                 }
@@ -535,15 +537,21 @@
         }
 
         function updateGameState(newState) {
-            if (newState.mapUrl && newState.mapUrl !== STATE.currentMapUrl) {
-                updateBackgroundImage(newState.mapUrl);
+
+            const newUrlString = newState.mapUrl?.url || newState.mapUrl;
+
+            if (newUrlString && newUrlString !== STATE.currentMapUrl) {
+                console.log("Map changed, updating image...");
+                updateBackgroundImage(newUrlString);
             }
+            
             STATE.lastServerState = newState;
         }
 
         function updateBackgroundImage(url) {
             STATE.currentMapUrl = url;
             layer0.style.backgroundImage = `url('${url}')`;
+            console.log('Background updated to:', url);
         }
 
         function updateConnectionStatus(status) {

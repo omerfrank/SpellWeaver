@@ -347,9 +347,22 @@ async function pushMapToPlayers() {
     
     const btn = document.querySelector('.btn-push-map');
     const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check me-2"></i>Map Pushed!';
     btn.disabled = true;
-    
+    const response = await fetch(`/api/grid/session/${sessionId}/map`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ map_url:  mapUrl})
+    });
+    const result = await response.json();
+    if (result && result.status === 'success') {
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Map Pushed!';
+    }
+    else{
+        console.log(response.json());
+        
+        btn.innerHTML = '<i class="fas fa-times me-2"></i><span style="color:#fff;background-color:#dc3545;padding:0.375rem 0.75rem;border-radius:0.25rem;display:inline-block;">Error changing map!</span>';
+
+    }
     setTimeout(() => {
         btn.innerHTML = originalHTML;
         btn.disabled = false;

@@ -31,4 +31,23 @@ def update_grid(session_id):
     return jsonify({"status": "success", "gameState": {
         "mapUrl": map,
         "effects": upd
-    }}, 200)
+    }}), 200
+@grid_bp.route('/session/<session_id>/map', methods=['POST'])
+@login_required
+def update_map(session_id):
+    try:
+        data = request.get_json()
+        map_link = data.get('map_url')
+
+        if not map_link:
+            return jsonify({"status": "error", "message": "No map URL provided"}), 400
+
+        success = firebase.update_grid_map(session_id, map_link)
+        
+        if success:
+            return jsonify({"status": "success", "message": "Map updated"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Database update failed"}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
