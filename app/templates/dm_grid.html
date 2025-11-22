@@ -147,7 +147,7 @@
         <div class="keybind"><kbd>?</kbd> Toggle help</div>
     </div>
 
-    <script>
+<script>
         // ============================================
         // CONFIGURATION
         // ============================================
@@ -162,7 +162,7 @@
             RANGE_COLOR: 'rgba(114, 137, 218, 0.5)',
             PING_COLOR: '#faa61a'
         };
-        let cell;
+        let cell; // Tracks current hover cell
 
         // ============================================
         // STATE MANAGEMENT
@@ -175,9 +175,11 @@
             selectedCells: new Set(),
             lastServerState: null,
             pollingActive: true,
-            // NEW: Dragging state for Range Mode
-            dragStart: null,
-            isDragging: false
+            
+            // Dragging State
+            isDragging: false,
+            dragStart: null,      // For Range Mode (Start Center)
+            selectionMode: true   // For Normal Mode (true=Select, false=Deselect)
         };
 
         // ============================================
@@ -275,10 +277,9 @@
         }
 
         function redrawEffects() {
-            // 1. Clear canvas
             ctx2.clearRect(0, 0, layer2.width, layer2.height);
             
-            // 2. Redraw Highlighted Cells
+            // Redraw Highlighted Cells
             STATE.selectedCells.forEach(cellKey => {
                 const [row, col] = cellKey.split(',').map(Number);
                 drawCellHighlight(row, col);
@@ -302,7 +303,6 @@
             
             const centerX = (centerCol + 0.5) * cellWidth;
             const centerY = (centerRow + 0.5) * cellHeight;
-            // Calculate radius based on the average cell size for better visuals
             const radius = radiusCells * Math.min(cellWidth, cellHeight);
             
             ctx2.fillStyle = CONFIG.RANGE_COLOR;
@@ -310,7 +310,6 @@
             ctx2.arc(centerX, centerY, radius, 0, Math.PI * 2);
             ctx2.fill();
             
-            // Optional: Add border to circle
             ctx2.strokeStyle = "rgba(255, 255, 255, 0.4)";
             ctx2.lineWidth = 2;
             ctx2.stroke();
@@ -332,18 +331,11 @@
                 const progress = elapsed / duration;
                 
                 if (progress >= 1) {
-                    // On finish, ensure we redraw static effects (highlights/circles)
-                    // so the ping clearing doesn't leave a hole
                     redrawEffects(); 
                     return;
                 }
                 
-                // We only want to clear/redraw for the ping animation
-                // But since it's same canvas, we must redraw everything
                 redrawEffects();
-                
-                // If we have a drag circle active, redraw it too (tricky with animation loop)
-                // Simplified: Ping might briefly clear circle during animation in this simple version.
                 
                 scale = progress * maxScale;
                 const alpha = 1 - progress;
@@ -362,7 +354,7 @@
         }
 
         // ============================================
-        // MOUSE INTERACTION
+        // MOUSE INTERACTION LOGIC
         // ============================================
         function getCellFromMouse(event) {
             const rect = layer2.getBoundingClientRect();
@@ -381,103 +373,99 @@
             return null;
         }
 
-        // NEW: Handle Mouse Down (Start Drag)
+        // Helper to toggle a specific cell on/off
+        function updateCellSelection(row, col, shouldSelect) {
+            const cellKey = `${row},${col}`;
+            if (shouldSelect) {
+                STATE.selectedCells.add(cellKey);
+            } else {
+                STATE.selectedCells.delete(cellKey);
+            }
+            redrawEffects();
+        }
+
         function handleMouseDown(event) {
-            if (!STATE.rangeModeActive) return;
-            
             const startCell = getCellFromMouse(event);
-            if (startCell) {
-                STATE.isDragging = true;
+            if (!startCell) return;
+
+            STATE.isDragging = true;
+
+            if (STATE.rangeModeActive) {
+                // --- RANGE MODE ---
                 STATE.dragStart = startCell;
+            } else {
+                // --- NORMAL SELECT MODE (PAINT) ---
+                const cellKey = `${startCell.row},${startCell.col}`;
+                
+                // Logic: If I click an active cell, I want to erase.
+                // If I click an empty cell, I want to add.
+                const isAlreadySelected = STATE.selectedCells.has(cellKey);
+                STATE.selectionMode = !isAlreadySelected; // Set mode for this drag session
+                
+                // Apply immediately to the first cell
+                updateCellSelection(startCell.row, startCell.col, STATE.selectionMode);
             }
         }
 
-        // NEW: Handle Mouse Up (End Drag)
         function handleMouseUp(event) {
-            if (STATE.isDragging) {
-                STATE.isDragging = false;
-                STATE.dragStart = null;
-                // Circle remains drawn on canvas until 'C' is pressed or other updates occur
-            }
-        }
-
-        function handleClick(event) {
-            cell = getCellFromMouse(event);
-            if (!cell) return;
-            
-            // MODIFIED: If Range Mode is active, ignore click (handled by drag)
-            // Only toggle cells if NOT in range mode
-            if (!STATE.rangeModeActive) {
-                const cellKey = `${cell.row},${cell.col}`;
-                
-                if (STATE.selectedCells.has(cellKey)) {
-                    STATE.selectedCells.delete(cellKey);
-                } else {
-                    STATE.selectedCells.add(cellKey);
-                }
-                
-                redrawEffects();
-            }
+            STATE.isDragging = false;
+            STATE.dragStart = null;
         }
 
         function handleMouseMove(event) {
             cell = getCellFromMouse(event);
             
+            // Update HUD
             if (cell) {
                 document.getElementById('currentCell').textContent = `[${cell.row}, ${cell.col}]`;
             } else {
                 document.getElementById('currentCell').textContent = '-';
             }
 
-            // NEW: Dragging Logic
-            if (STATE.rangeModeActive && STATE.isDragging && STATE.dragStart && cell) {
-                // Calculate distance (Radius) using Euclidean distance
-                const dx = cell.col - STATE.dragStart.col;
-                const dy = cell.row - STATE.dragStart.row;
-                const radius = Math.sqrt(dx * dx + dy * dy);
-
-                // Clear and Redraw to show dynamic update
-                // 1. Clear and redraw highlights (so we don't lose them)
-                redrawEffects(); 
+            // Handle Dragging Logic
+            if (STATE.isDragging && cell) {
                 
-                // 2. Draw the circle on top
-                drawRangeCircle(STATE.dragStart.row, STATE.dragStart.col, radius);
+                if (STATE.rangeModeActive && STATE.dragStart) {
+                    // Range Mode: Draw Circle
+                    const dx = cell.col - STATE.dragStart.col;
+                    const dy = cell.row - STATE.dragStart.row;
+                    const radius = Math.sqrt(dx * dx + dy * dy);
+                    redrawEffects(); 
+                    drawRangeCircle(STATE.dragStart.row, STATE.dragStart.col, radius);
+
+                } else if (!STATE.rangeModeActive) {
+                    // Normal Mode: Paint Selection
+                    // Apply the mode (Select vs Deselect) determined in MouseDown
+                    updateCellSelection(cell.row, cell.col, STATE.selectionMode);
+                }
             }
         }
 
         // ============================================
-        // KEYBOARD CONTROLS
+        // EVENT LISTENERS
         // ============================================
         function setupEventListeners() {
-            // Mouse events
-            layer2.addEventListener('click', handleClick);
-            layer2.addEventListener('mousemove', handleMouseMove);
-            // NEW: Listeners for drag interaction
+            // Use MouseDown/Move/Up instead of Click for dragging support
             layer2.addEventListener('mousedown', handleMouseDown);
+            layer2.addEventListener('mousemove', handleMouseMove);
             layer2.addEventListener('mouseup', handleMouseUp);
+            // Safety: Stop dragging if mouse leaves window
+            layer2.addEventListener('mouseleave', handleMouseUp);
             
-            // Keyboard events
             document.addEventListener('keydown', (e) => {
-                // Ignore repeats (holding key down)
                 if (e.repeat) return;
 
                 switch(e.key.toLowerCase()) {
-                    case 'c':
-                        clearEffects();
-                        break;
-                    case 'h':
-                        toggleBackground();
-                        break;
-                    case 'm':
+                    case 'c': clearEffects(); break;
+                    case 'h': toggleBackground(); break;
+                    case 'm': 
                         STATE.rangeModeActive = true;
-                        layer2.style.cursor = 'crosshair'; // Optional: change cursor
+                        layer2.style.cursor = 'crosshair';
                         break;
-                    case 't':
+                    case 't': 
                         if (cell) pingCell(cell.row, cell.col);
                         break;
-                    case '?':
-                        toggleHelp();
-                        break;
+                    case '?': toggleHelp(); break;
                 }
             });
             
@@ -485,12 +473,7 @@
                 if (e.key.toLowerCase() === 'm') {
                     STATE.rangeModeActive = false;
                     layer2.style.cursor = 'crosshair';
-                    
-                    // Safety cleanup if they release M while dragging
-                    if (STATE.isDragging) {
-                        STATE.isDragging = false;
-                        STATE.dragStart = null;
-                    }
+                    handleMouseUp(); // Cleanup drag if key released mid-drag
                 }
             });
         }
@@ -513,9 +496,7 @@
         function startPolling() {
             fetchGameState();
             setInterval(() => {
-                if (STATE.pollingActive) {
-                    fetchGameState();
-                }
+                if (STATE.pollingActive) fetchGameState();
             }, CONFIG.POLL_INTERVAL);
         }
 
@@ -523,10 +504,10 @@
             try {
                 const response = await fetch(`/api/grid/session/${STATE.sessionId}/gridState`);
                 if (!response.ok) throw new Error('Failed to fetch game state');
+                
                 const data = await response.json();
-
+                
                 if (data.status === 'success') {
-                    console.log("state")
                     updateGameState(data.gameState);
                     updateConnectionStatus('connected');
                 }
@@ -537,30 +518,22 @@
         }
 
         function updateGameState(newState) {
-
+            // Handle map image update
             const newUrlString = newState.mapUrl?.url || newState.mapUrl;
-
             if (newUrlString && newUrlString !== STATE.currentMapUrl) {
-                console.log("Map changed, updating image...");
                 updateBackgroundImage(newUrlString);
             }
-            
             STATE.lastServerState = newState;
         }
 
         function updateBackgroundImage(url) {
             STATE.currentMapUrl = url;
             layer0.style.backgroundImage = `url('${url}')`;
-            console.log('Background updated to:', url);
         }
 
         function updateConnectionStatus(status) {
             const statusEl = document.getElementById('connectionStatus');
-            if (status === 'connected') {
-                statusEl.className = 'connected';
-            } else {
-                statusEl.className = 'error';
-            }
+            statusEl.className = (status === 'connected') ? 'connected' : 'error';
         }
 
         // ============================================
