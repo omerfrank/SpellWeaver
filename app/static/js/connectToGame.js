@@ -239,7 +239,7 @@ async function connectToGame() {
             
             // Redirect to player game view after 1.5 seconds
             setTimeout(() => {
-                window.location.href = '/player/gameSession';
+                window.location.href = '/player/showcase';
             }, 1500);
             
         } else {
