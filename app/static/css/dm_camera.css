@@ -1,0 +1,230 @@
+/* Camera Manager Styles */
+
+/* Status Badge */
+.status-badge {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.status-badge i {
+    font-size: 0.7rem;
+}
+
+.status-disconnected {
+    background-color: #4f545c;
+    color: #ffffff;
+}
+
+.status-scanning {
+    background-color: #faa61a;
+    color: #23272a;
+}
+
+.status-scanning i {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-connected {
+    background-color: #57f287;
+    color: #23272a;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Camera Feed Container */
+.camera-feed-container {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid #4f545c;
+    transition: border-color 0.3s ease;
+}
+
+.camera-feed-container:hover {
+    border-color: #5865f2;
+}
+
+/* Camera Placeholder */
+.camera-placeholder {
+    transition: opacity 0.3s ease;
+}
+
+.camera-placeholder i {
+    transition: transform 0.3s ease;
+}
+
+.camera-placeholder:hover i {
+    transform: scale(1.1);
+}
+
+/* Camera Feed Image */
+#cameraFeed {
+    background-color: #1a1a1a;
+    transition: opacity 0.5s ease;
+}
+
+/* Control Panel */
+.control-panel {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid #4f545c;
+}
+
+/* Buttons */
+#connectCameraBtn,
+#disconnectCameraBtn {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+#connectCameraBtn:hover:not(:disabled) {
+    background-color: #4752c4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+}
+
+#disconnectCameraBtn:hover:not(:disabled) {
+    background-color: #c03537;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(237, 66, 69, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Status Message */
+#statusMessage {
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.6;
+}
+
+#statusMessage i {
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+#statusMessage span {
+    flex: 1;
+}
+
+/* Connection Info */
+.connection-info-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #4f545c;
+}
+
+.connection-info-item:last-child {
+    border-bottom: none;
+}
+
+/* Modal Customization */
+#cameraManagerModal .modal-content {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+#cameraManagerModal .modal-header {
+    background: linear-gradient(135deg, #23272a 0%, #2c2f33 100%);
+}
+
+#cameraManagerModal .modal-footer {
+    background: linear-gradient(135deg, #2c2f33 0%, #23272a 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+    .camera-feed-container {
+        aspect-ratio: 4/3;
+        margin-bottom: 20px;
+    }
+    
+    .control-panel {
+        min-height: auto;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 575px) {
+    #cameraManagerModal .modal-dialog {
+        margin: 10px;
+    }
+    
+    .camera-feed-container {
+        aspect-ratio: 1/1;
+    }
+    
+    #connectCameraBtn,
+    #disconnectCameraBtn {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Loading Animation for Video Feed */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.camera-feed-container.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        rgba(44, 47, 51, 0) 0%,
+        rgba(79, 84, 92, 0.3) 50%,
+        rgba(44, 47, 51, 0) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+    pointer-events: none;
+}
+
+/* Smooth transitions */
+.camera-feed-container * {
+    transition: opacity 0.3s ease;
+}
+
+/* Focus states for accessibility */
+#connectCameraBtn:focus,
+#disconnectCameraBtn:focus {
+    outline: 2px solid #5865f2;
+    outline-offset: 2px;
+}
+
+/* Success/Error animations */
+@keyframes successPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(87, 242, 135, 0.7); }
+    50% { box-shadow: 0 0 0 10px rgba(87, 242, 135, 0); }
+}
+
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.success-pulse {
+    animation: successPulse 0.6s ease;
+}
+
+.error-shake {
+    animation: errorShake 0.4s ease;
+}
