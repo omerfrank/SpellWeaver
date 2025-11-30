@@ -25,10 +25,9 @@ def connect_camera():
     """
     print("connecting... ")
     camera_service = get_camera_service()
-    
+    print("connected succ \n")
     # Find camera in Firebase
     result = camera_service.find_camera()
-    
     if result['status'] == 'success':
         # Start streaming automatically on successful connection
         stream_result = camera_service.start_streaming()
