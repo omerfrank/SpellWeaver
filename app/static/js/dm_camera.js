@@ -65,7 +65,6 @@ const CameraManager = {
         this.setState(this.STATE.SCANNING);
         
         try {
-            // TODO: Replace with actual API endpoint
             const response = await fetch('/api/camera/connect', {
                 method: 'POST',
                 headers: {
