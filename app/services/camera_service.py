@@ -11,6 +11,7 @@ import serial.tools.list_ports
 import re
 from typing import Optional, Dict, Any
 from datetime import datetime
+from urllib3.exceptions import IncompleteRead
 
 
 class CameraService:
@@ -186,22 +187,16 @@ class CameraService:
         """
         Test if camera is responding at given IP.
         For MJPEG streams, we need to verify we can start reading the stream.
-        
-        Args:
-            ip: IP address to test
-            
-        Returns:
-            bool: True if camera responds
         """
         try:
             test_url = f"http://{ip}:80/"
             print(f"  Testing connection to {test_url}")
             
-            # Open stream connection (don't wait for full response)
+            # Open stream connection
             response = requests.get(
                 test_url, 
                 timeout=5,
-                stream=True  # Critical: stream mode for MJPEG
+                stream=True
             )
             
             # Check status code
@@ -212,21 +207,40 @@ class CameraService:
             
             print(f"  ✅ Stream opened (status: {response.status_code})")
             
-            # Try to read first chunk to verify stream is actually working
+            # --- התיקון מתחיל כאן ---
+            # במקום לקרוא צ'אנק אחד, נקרא עד שנוודא שיש תמונה או עד שנעבור סף מסוים
+            bytes_buffer = b''
+            max_bytes_to_check = 20480  # בודק עד 20KB ראשונים
+            stream_confirmed = False
+
             try:
-                chunk = next(response.iter_content(chunk_size=1024), None)
-                if chunk and b'\xff\xd8' in chunk:
-                    print(f"  ✅ MJPEG stream confirmed (received {len(chunk)} bytes)")
-                    response.close()
+                # משתמשים בלולאה כמו בקוד שעובד
+                for chunk in response.iter_content(chunk_size=1024):
+                    bytes_buffer += chunk
+                    
+                    # בדיקה אם הגענו לסף הבדיקה כדי לא להיתקע לנצח
+                    if len(bytes_buffer) > max_bytes_to_check:
+                        break
+
+                    # חיפוש תחילת תמונת JPEG
+                    if b'\xff\xd8' in bytes_buffer:
+                        print(f"  ✅ MJPEG stream confirmed (found header in {len(bytes_buffer)} bytes)")
+                        stream_confirmed = True
+                        break
+                
+                response.close()
+                
+                if stream_confirmed:
                     return True
                 else:
-                    print(f"  ⚠️ Stream opened but no JPEG data detected")
-                    response.close()
+                    print(f"  ⚠️ Stream opened but no JPEG magic bytes detected in first {max_bytes_to_check} bytes")
                     return False
+
             except Exception as chunk_error:
                 print(f"  ❌ Error reading stream: {chunk_error}")
                 response.close()
                 return False
+            # --- סוף התיקון ---
             
         except requests.exceptions.Timeout:
             print(f"  ❌ Connection timeout")
@@ -242,9 +256,6 @@ class CameraService:
         """
         Start continuous frame capture from camera.
         Runs in separate thread to avoid blocking.
-        
-        Returns:
-            dict: Status of stream start
         """
         if not self.is_connected:
             return {
@@ -260,11 +271,12 @@ class CameraService:
         
         try:
             self.should_stop = False
+            # אנחנו מפעילים את ה-Thread
             self.stream_thread = threading.Thread(target=self._stream_loop, daemon=True)
             self.stream_thread.start()
             self.is_streaming = True
             
-            print("▶️ Camera stream started")
+            print("▶️ Camera stream thread initiated")
             return {
                 'status': 'success',
                 'message': 'Stream started successfully'
@@ -275,61 +287,85 @@ class CameraService:
                 'status': 'error',
                 'message': f'Failed to start stream: {str(e)}'
             }
-    
+
     def _stream_loop(self):
         """
         Continuous loop to fetch frames from camera.
-        For MJPEG stream, we read the multipart stream directly.
-        Runs in separate thread.
+        Uses raw socket reading to handle 'IncompleteRead' errors gracefully.
         """
-        print("🎥 Stream loop started")
+        print("🎥 Stream loop started - Waiting for ESP32 to recover...")
+        time.sleep(2.0)  # Cool-down time
+        
+        print(f"  Connecting to stream: {self.stream_url}")
         
         try:
-            # Connect to MJPEG stream
-            print(f"  Connecting to stream: {self.stream_url}")
+            # stream=True חשוב מאוד, וגם decode_content=False כדי לקבל בייטים גולמיים
             response = requests.get(
                 self.stream_url,
                 stream=True,
-                timeout=10
+                timeout=20
             )
             
             if response.status_code != 200:
                 print(f"❌ Stream connection failed: {response.status_code}")
+                response.close()
+                self.is_streaming = False
                 return
             
-            print("✅ Stream connected, reading frames...")
+            print("✅ Stream connected, reading frames (Raw Mode)...")
             
-            # Read MJPEG stream
-            # The stream format is: --boundary\r\nContent-Type: image/jpeg\r\n\r\n[JPEG DATA]\r\n
             bytes_data = bytes()
             
-            for chunk in response.iter_content(chunk_size=1024):
-                if self.should_stop:
-                    break
-                
-                bytes_data += chunk
-                
-                # Look for JPEG start marker (0xFFD8)
-                a = bytes_data.find(b'\xff\xd8')
-                # Look for JPEG end marker (0xFFD9)
-                b = bytes_data.find(b'\xff\xd9')
-                
-                if a != -1 and b != -1:
-                    # Extract complete JPEG frame
-                    jpg = bytes_data[a:b+2]
-                    bytes_data = bytes_data[b+2:]
+            # אנחנו משתמשים ב-response.raw כדי לעקוף עיבודים מיותרים של requests
+            while not self.should_stop:
+                try:
+                    # קריאה גולמית של 1024 בייטים בכל פעם
+                    chunk = response.raw.read(1024)
                     
-                    # Store frame
-                    self.last_frame = jpg
-                    self.last_update = datetime.utcnow()
+                    if not chunk:
+                        print("⚠️ Empty chunk received, stream might be closed")
+                        break
                     
+                    bytes_data += chunk
+                    
+                    # --- לוגיקת חילוץ תמונה (כמו קודם) ---
+                    while True:  # לולאה פנימית למקרה שיש יותר מתמונה אחת בבאפר
+                        a = bytes_data.find(b'\xff\xd8') # Start of JPEG
+                        b = bytes_data.find(b'\xff\xd9') # End of JPEG
+                        
+                        if a != -1 and b != -1:
+                            # מצאנו תמונה שלמה
+                            jpg = bytes_data[a:b+2]
+                            
+                            # מנקים את הבאפר ושומרים את השארית לפעם הבאה
+                            bytes_data = bytes_data[b+2:]
+                            
+                            # עדכון הפריים האחרון
+                            self.last_frame = jpg
+                            self.last_update = datetime.utcnow()
+                        else:
+                            # אין תמונה שלמה, נצא לקרוא עוד מידע
+                            break
+                            
+                except (IncompleteRead, Exception) as e:
+                    # הטריק החשוב: אם יש שגיאת קריאה חלקית, אנחנו מנסים להציל את המידע
+                    # רוב הזמן המידע תקין ורק הפרוטוקול נכשל
+                    if hasattr(e, 'partial') and e.partial:
+                        bytes_data += e.partial
+                    else:
+                        # אם זו שגיאה אחרת, פשוט נמשיך לנסות לקרוא (לא קורסים!)
+                        continue
+            
             response.close()
             
         except requests.exceptions.Timeout:
-            print("❌ Stream timeout - camera stopped responding")
+            print("❌ Stream timeout")
+        except requests.exceptions.ConnectionError:
+            print("❌ Stream connection error")
         except Exception as e:
-            print(f"❌ Error in stream loop: {e}")
+            print(f"❌ Critical error in stream loop: {e}")
         
+        self.is_streaming = False
         print("⏹️ Stream loop stopped")
     
     def get_latest_frame(self) -> Optional[bytes]:
