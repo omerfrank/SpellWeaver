@@ -77,7 +77,7 @@ class CameraService:
                     # Test connection to camera
                     if self._test_connection(ip_address):
                         self.camera_ip = ip_address
-                        self.stream_url = f"http://{ip_address}{self.stream_endpoint}"
+                        self.stream_url = f"http://{ip_address}:80/"
                         self.is_connected = True
                         
                         return {
@@ -89,7 +89,7 @@ class CameraService:
                     else:
                         return {
                             'status': 'error',
-                            'message': f'Camera found at {ip_address} but not responding'
+                            'message': f'Camera found at {ip_address} but stream test failed. Check network connection.'
                         }
             
             return {
@@ -185,6 +185,7 @@ class CameraService:
     def _test_connection(self, ip: str) -> bool:
         """
         Test if camera is responding at given IP.
+        For MJPEG streams, we need to verify we can start reading the stream.
         
         Args:
             ip: IP address to test
@@ -193,11 +194,48 @@ class CameraService:
             bool: True if camera responds
         """
         try:
-            test_url = f"http://{ip}{self.stream_endpoint}"
-            response = requests.get(test_url, timeout=self.connection_timeout)
-            return response.status_code == 200
+            test_url = f"http://{ip}:80/"
+            print(f"  Testing connection to {test_url}")
+            
+            # Open stream connection (don't wait for full response)
+            response = requests.get(
+                test_url, 
+                timeout=5,
+                stream=True  # Critical: stream mode for MJPEG
+            )
+            
+            # Check status code
+            if response.status_code != 200:
+                print(f"  ⚠️ Unexpected status: {response.status_code}")
+                response.close()
+                return False
+            
+            print(f"  ✅ Stream opened (status: {response.status_code})")
+            
+            # Try to read first chunk to verify stream is actually working
+            try:
+                chunk = next(response.iter_content(chunk_size=1024), None)
+                if chunk and b'\xff\xd8' in chunk:
+                    print(f"  ✅ MJPEG stream confirmed (received {len(chunk)} bytes)")
+                    response.close()
+                    return True
+                else:
+                    print(f"  ⚠️ Stream opened but no JPEG data detected")
+                    response.close()
+                    return False
+            except Exception as chunk_error:
+                print(f"  ❌ Error reading stream: {chunk_error}")
+                response.close()
+                return False
+            
+        except requests.exceptions.Timeout:
+            print(f"  ❌ Connection timeout")
+            return False
+        except requests.exceptions.ConnectionError as e:
+            print(f"  ❌ Connection error: {e}")
+            return False
         except Exception as e:
-            print(f"❌ Connection test failed: {e}")
+            print(f"  ❌ Connection test failed: {e}")
             return False
     
     def start_streaming(self) -> Dict[str, Any]:
@@ -241,32 +279,56 @@ class CameraService:
     def _stream_loop(self):
         """
         Continuous loop to fetch frames from camera.
+        For MJPEG stream, we read the multipart stream directly.
         Runs in separate thread.
         """
         print("🎥 Stream loop started")
-        frame_interval = 1.0 / self.frame_rate
         
-        while not self.should_stop:
-            try:
-                # Fetch frame from ESP32-CAM
-                response = requests.get(
-                    self.stream_url,
-                    timeout=self.connection_timeout,
-                    params={'quality': self.quality}
-                )
+        try:
+            # Connect to MJPEG stream
+            print(f"  Connecting to stream: {self.stream_url}")
+            response = requests.get(
+                self.stream_url,
+                stream=True,
+                timeout=10
+            )
+            
+            if response.status_code != 200:
+                print(f"❌ Stream connection failed: {response.status_code}")
+                return
+            
+            print("✅ Stream connected, reading frames...")
+            
+            # Read MJPEG stream
+            # The stream format is: --boundary\r\nContent-Type: image/jpeg\r\n\r\n[JPEG DATA]\r\n
+            bytes_data = bytes()
+            
+            for chunk in response.iter_content(chunk_size=1024):
+                if self.should_stop:
+                    break
                 
-                if response.status_code == 200:
-                    self.last_frame = response.content
+                bytes_data += chunk
+                
+                # Look for JPEG start marker (0xFFD8)
+                a = bytes_data.find(b'\xff\xd8')
+                # Look for JPEG end marker (0xFFD9)
+                b = bytes_data.find(b'\xff\xd9')
+                
+                if a != -1 and b != -1:
+                    # Extract complete JPEG frame
+                    jpg = bytes_data[a:b+2]
+                    bytes_data = bytes_data[b+2:]
+                    
+                    # Store frame
+                    self.last_frame = jpg
                     self.last_update = datetime.utcnow()
-                else:
-                    print(f"⚠️ Frame fetch failed: {response.status_code}")
-                
-            except Exception as e:
-                print(f"❌ Error in stream loop: {e}")
-                time.sleep(1)  # Wait before retry
-                
-            # Control frame rate
-            time.sleep(frame_interval)
+                    
+            response.close()
+            
+        except requests.exceptions.Timeout:
+            print("❌ Stream timeout - camera stopped responding")
+        except Exception as e:
+            print(f"❌ Error in stream loop: {e}")
         
         print("⏹️ Stream loop stopped")
     
@@ -361,12 +423,73 @@ class CameraService:
             'stream_url': '/api/camera/stream' if self.is_connected else None,
             'last_update': self.last_update.isoformat() if self.last_update else None,
             'frame_rate': self.frame_rate,
-            'quality': self.quality
+            'quality': self.quality,
+            'has_frame': self.last_frame is not None
         }
+    
+    def test_camera_http(self, ip: str) -> Dict[str, Any]:
+        """
+        Comprehensive diagnostic test of camera HTTP endpoint.
+        Useful for troubleshooting connection issues.
+        
+        Args:
+            ip: IP address to test
+            
+        Returns:
+            dict: Detailed test results
+        """
+        results = {
+            'ip': ip,
+            'reachable': False,
+            'responds': False,
+            'streaming': False,
+            'error': None
+        }
+        
+        try:
+            test_url = f"http://{ip}/"
+            
+            # Test 1: Can we reach it?
+            print(f"🧪 Testing camera at {test_url}")
+            
+            response = requests.get(test_url, timeout=10, stream=True)
+            results['reachable'] = True
+            results['responds'] = response.status_code == 200
+            
+            print(f"  Status Code: {response.status_code}")
+            print(f"  Content-Type: {response.headers.get('Content-Type', 'N/A')}")
+            
+            # Test 2: Is it actually streaming?
+            if response.status_code == 200:
+                # Read first chunk to verify it's MJPEG
+                chunk = next(response.iter_content(chunk_size=512), None)
+                if chunk:
+                    # Check for JPEG marker
+                    if b'\xff\xd8' in chunk:
+                        results['streaming'] = True
+                        print("  ✅ MJPEG stream detected")
+                    else:
+                        print("  ⚠️ Response received but not JPEG format")
+                        print(f"  First bytes: {chunk[:50]}")
+            
+            response.close()
+            
+        except requests.exceptions.Timeout as e:
+            results['error'] = f"Timeout: {str(e)}"
+            print(f"  ❌ Timeout connecting to camera")
+        except requests.exceptions.ConnectionError as e:
+            results['error'] = f"Connection Error: {str(e)}"
+            print(f"  ❌ Cannot connect to camera")
+        except Exception as e:
+            results['error'] = str(e)
+            print(f"  ❌ Test failed: {e}")
+        
+        return results
     
     def capture_single_frame(self) -> Optional[bytes]:
         """
         Capture a single frame without starting continuous streaming.
+        For MJPEG streams, we need to read until we get a complete frame.
         Useful for testing or one-time captures.
         
         Returns:
@@ -377,17 +500,42 @@ class CameraService:
             return None
         
         try:
+            print("📸 Capturing single frame...")
             response = requests.get(
                 self.stream_url,
-                timeout=self.connection_timeout,
-                params={'quality': self.quality}
+                timeout=10,
+                stream=True
             )
             
-            if response.status_code == 200:
-                return response.content
-            else:
+            if response.status_code != 200:
                 print(f"❌ Frame capture failed: {response.status_code}")
                 return None
+            
+            # Read stream until we get one complete JPEG
+            bytes_data = bytes()
+            
+            for chunk in response.iter_content(chunk_size=1024):
+                bytes_data += chunk
+                
+                # Look for JPEG markers
+                a = bytes_data.find(b'\xff\xd8')  # JPEG start
+                b = bytes_data.find(b'\xff\xd9')  # JPEG end
+                
+                if a != -1 and b != -1:
+                    jpg = bytes_data[a:b+2]
+                    response.close()
+                    print(f"✅ Frame captured ({len(jpg)} bytes)")
+                    return jpg
+                
+                # Prevent reading too much data
+                if len(bytes_data) > 1000000:  # 1MB limit
+                    print("❌ Frame too large or malformed")
+                    response.close()
+                    return None
+            
+            response.close()
+            print("❌ No complete frame found in stream")
+            return None
                 
         except Exception as e:
             print(f"❌ Error capturing frame: {e}")
