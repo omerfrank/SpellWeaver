@@ -1,3 +1,7 @@
+// Webcam Manager Module - Client-Side Camera Control
+// Handles MediaStream API and snapshot uploads
+// Create file: app/static/js/dm_webcam.js
+
 const WebcamManager = {
     // State
     stream: null,
@@ -29,6 +33,9 @@ const WebcamManager = {
         if (!this.sessionId) {
             console.warn('No active session ID found');
         }
+        
+        // Check if webcam was running before modal closed
+        this.restoreBackgroundState();
     },
 
     /**
@@ -78,10 +85,12 @@ const WebcamManager = {
             this.toggleAutoCapture(e.target.checked);
         });
 
-        // Cleanup on modal close
+        // Keep webcam running when modal closes
         this.elements.modal.addEventListener('hidden.bs.modal', () => {
+            // Do NOT stop webcam - let it run in background
             if (this.isActive) {
-                this.stopWebcam();
+                console.log('ℹ️ Modal closed, webcam continues in background');
+                this.showBackgroundNotification();
             }
         });
     },
@@ -368,6 +377,119 @@ const WebcamManager = {
             <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
             <span class="text-danger">${message}</span>
         `;
+    },
+
+    /**
+     * Restore background state when modal reopens
+     */
+    restoreBackgroundState() {
+        if (this.isActive && this.stream) {
+            console.log('🔄 Restoring webcam UI state');
+            
+            // Video should still be connected
+            this.elements.video.style.display = 'block';
+            this.elements.placeholder.style.display = 'none';
+            
+            // Update UI to match running state
+            this.elements.startBtn.style.display = 'none';
+            this.elements.stopBtn.style.display = 'block';
+            this.elements.captureBtn.disabled = false;
+            this.elements.autoCapture.disabled = false;
+            
+            // Update status
+            this.updateStatus('active', 'Webcam is running in background. Auto-capture active.');
+            
+            // Restore auto-capture checkbox state
+            this.elements.autoCapture.checked = this.autoCapture;
+        }
+    },
+
+    /**
+     * Get current state for persistence
+     */
+    getState() {
+        return {
+            isActive: this.isActive,
+            autoCapture: this.autoCapture,
+            snapshotCount: this.snapshotCount,
+            sessionId: this.sessionId
+        };
+    },
+
+    /**
+     * Show notification that webcam is running in background
+     */
+    showBackgroundNotification() {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'webcam-background-toast';
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-camera" style="font-size: 1.5rem; color: #57f287;"></i>
+                <div style="flex: 1;">
+                    <strong style="display: block; margin-bottom: 4px;">Webcam Running in Background</strong>
+                    <small style="opacity: 0.8;">
+                        ${this.autoCapture ? 'Auto-capturing every 3 seconds' : 'Ready to capture snapshots'}
+                    </small>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        style="background: none; border: none; color: #ffffff; opacity: 0.6; cursor: pointer; font-size: 1.2rem; padding: 0; width: 24px; height: 24px;">
+                    ×
+                </button>
+            </div>
+        `;
+        
+        // Add styles
+        toast.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #2c2f33 0%, #23272a 100%);
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border: 1px solid #4f545c;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease;
+            font-size: 0.9rem;
+        `;
+        
+        // Add animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(toast);
+        
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
     }
 };
 

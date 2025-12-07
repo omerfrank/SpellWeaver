@@ -31,7 +31,7 @@ const STATE = {
     // Data Sets
     selectedCells: new Set(),
     foggedCells: new Set(),
-    serverEffects: {}, // NEW: Store effects from server
+    serverEffects: {}, // Store effects from server
     
     lastServerState: null,
     pollingActive: true,

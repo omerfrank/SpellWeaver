@@ -29,6 +29,177 @@
                             data-bs-target="#webcamManagerModal">
                         <i class="fas fa-camera me-1"></i> Local Webcam
                     </button>
+                    <style>
+.webcam-background-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #57f287 0%, #3ca374 100%);
+    color: #23272a;
+    padding: 12px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(87, 242, 135, 0.4);
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    z-index: 9998;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.webcam-background-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(87, 242, 135, 0.5);
+}
+
+.webcam-background-indicator i.recording-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #ed4245;
+    border-radius: 50%;
+    display: inline-block;
+    animation: recording-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(87, 242, 135, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(87, 242, 135, 0.6);
+    }
+}
+
+@keyframes recording-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+}
+
+.webcam-background-indicator .stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 8px;
+    padding-left: 12px;
+    border-left: 2px solid rgba(35, 39, 42, 0.3);
+}
+
+.webcam-background-indicator .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+}
+</style>
+
+<!-- Indicator Element -->
+<div id="webcamBackgroundIndicator" class="webcam-background-indicator" onclick="openWebcamModal()">
+    <i class="recording-dot"></i>
+    <span>Webcam Active</span>
+    <div class="stats">
+        <div class="stat-item">
+            <i class="fas fa-camera"></i>
+            <span id="bgSnapshotCount">0</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <span id="bgLastCapture">--:--</span>
+        </div>
+    </div>
+    <i class="fas fa-external-link-alt ms-2" style="opacity: 0.6; font-size: 0.7rem;"></i>
+</div>
+
+<script>
+// Background Indicator Manager
+const WebcamBackgroundIndicator = {
+    indicator: null,
+    snapshotCount: null,
+    lastCapture: null,
+    updateInterval: null,
+
+    init() {
+        this.indicator = document.getElementById('webcamBackgroundIndicator');
+        this.snapshotCount = document.getElementById('bgSnapshotCount');
+        this.lastCapture = document.getElementById('bgLastCapture');
+
+        // Start monitoring
+        this.startMonitoring();
+    },
+
+    startMonitoring() {
+        // Check every second
+        this.updateInterval = setInterval(() => {
+            this.updateDisplay();
+        }, 1000);
+    },
+
+    updateDisplay() {
+        if (window.WebcamManager && window.WebcamManager.isActive) {
+            // Show indicator
+            this.indicator.style.display = 'flex';
+
+            // Update snapshot count
+            this.snapshotCount.textContent = window.WebcamManager.snapshotCount;
+
+            // Update last capture time (format as HH:MM:SS)
+            const lastUploadEl = document.getElementById('lastUpload');
+            if (lastUploadEl && lastUploadEl.textContent !== 'Never') {
+                this.lastCapture.textContent = lastUploadEl.textContent;
+            } else {
+                this.lastCapture.textContent = '--:--';
+            }
+
+            // Add auto-capture badge if active
+            if (window.WebcamManager.autoCapture) {
+                if (!this.indicator.querySelector('.auto-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'auto-badge';
+                    badge.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Auto';
+                    badge.style.cssText = 'background: rgba(35,39,42,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; margin-left: 8px;';
+                    this.indicator.insertBefore(badge, this.indicator.querySelector('.stats'));
+                }
+            } else {
+                const badge = this.indicator.querySelector('.auto-badge');
+                if (badge) badge.remove();
+            }
+        } else {
+            // Hide indicator
+            this.indicator.style.display = 'none';
+        }
+    },
+
+    destroy() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+        }
+    }
+};
+
+// Helper function to open modal
+function openWebcamModal() {
+    const modal = new bootstrap.Modal(document.getElementById('webcamManagerModal'));
+    modal.show();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    WebcamBackgroundIndicator.init();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    WebcamBackgroundIndicator.destroy();
+});
+</script>
                 </div>
                 <div>
                     <button class="btn btn-sm btn-outline-light" onclick="window.location.href='/dm/campaignSelect'">
@@ -291,6 +462,7 @@
     </div>
 
     <!-- webcam model -->
+    
     <div class="modal fade" id="webcamManagerModal" tabindex="-1" aria-labelledby="webcamManagerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
@@ -422,10 +594,12 @@
                 <!-- Modal Footer -->
                 <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
                     <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
-                        <i class="fas fa-lightbulb me-2"></i>
-                        <strong>Tip:</strong> Grant camera permissions when prompted by your browser.
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Closing this window keeps the webcam running in the background.
                     </div>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-minimize me-2"></i>Minimize
+                    </button>
                 </div>
                 
             </div>
