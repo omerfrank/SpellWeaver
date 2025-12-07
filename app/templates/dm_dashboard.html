@@ -9,213 +9,62 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/dmDashboard.css">
     <link rel="stylesheet" href="/static/css/dm_camera.css">
+    <link rel="stylesheet" href="/static/css/dm_webcam_background.css">
 
     <link rel="icon" type="image/webp" href="/static/icons/Quest_Weaver_Icon.webp">
 </head>
 <body>
-    <!-- Top Navigation -->
     <nav class="top-navbar">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center">
+                
                 <div class="d-flex align-items-center">
                     <img src="/static/icons/Quest_Weaver_Icon.webp" style="height: 40px; width: auto; margin-right: 10px;" alt="Quest Weaver Logo">
                     <strong>DM Dashboard</strong>
-                    <button class="btn btn-outline-light btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#cameraManagerModal">
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    
+                    <span class="text-muted small border-end pe-3 me-1" id="campaignName">Loading...</span>
+
+                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#cameraManagerModal">
                         <i class="fas fa-video me-1"></i> Camera Manager
                     </button>
-                    <span class="ms-3 text-muted" id="campaignName">Loading...</span>
-                    <button class="btn btn-outline-light btn-sm ms-2" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#webcamManagerModal">
+                    
+                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#webcamManagerModal">
                         <i class="fas fa-camera me-1"></i> Local Webcam
                     </button>
-                    <style>
-.webcam-background-indicator {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #57f287 0%, #3ca374 100%);
-    color: #23272a;
-    padding: 12px 20px;
-    border-radius: 25px;
-    box-shadow: 0 4px 12px rgba(87, 242, 135, 0.4);
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: none;
-    align-items: center;
-    gap: 10px;
-    z-index: 9998;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    animation: pulse-glow 2s ease-in-out infinite;
-}
+                    
+                    <div id="webcamBackgroundIndicator" class="webcam-background-indicator" onclick="openWebcamModal()">
+                        <i class="recording-dot"></i>
+                        <span>Webcam Active</span>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <i class="fas fa-camera"></i>
+                                <span id="bgSnapshotCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <span id="bgLastCapture">--:--</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-external-link-alt ms-2" style="opacity: 0.6; font-size: 0.7rem;"></i>
+                    </div>
 
-.webcam-background-indicator:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(87, 242, 135, 0.5);
-}
+                    <div class="vr text-light mx-1" style="opacity: 0.5; height: 25px;"></div>
 
-.webcam-background-indicator i.recording-dot {
-    width: 10px;
-    height: 10px;
-    background-color: #ed4245;
-    border-radius: 50%;
-    display: inline-block;
-    animation: recording-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 4px 12px rgba(87, 242, 135, 0.4);
-    }
-    50% {
-        box-shadow: 0 4px 20px rgba(87, 242, 135, 0.6);
-    }
-}
-
-@keyframes recording-pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.6;
-        transform: scale(0.9);
-    }
-}
-
-.webcam-background-indicator .stats {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: 8px;
-    padding-left: 12px;
-    border-left: 2px solid rgba(35, 39, 42, 0.3);
-}
-
-.webcam-background-indicator .stat-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.75rem;
-}
-</style>
-
-<!-- Indicator Element -->
-<div id="webcamBackgroundIndicator" class="webcam-background-indicator" onclick="openWebcamModal()">
-    <i class="recording-dot"></i>
-    <span>Webcam Active</span>
-    <div class="stats">
-        <div class="stat-item">
-            <i class="fas fa-camera"></i>
-            <span id="bgSnapshotCount">0</span>
-        </div>
-        <div class="stat-item">
-            <i class="fas fa-clock"></i>
-            <span id="bgLastCapture">--:--</span>
-        </div>
-    </div>
-    <i class="fas fa-external-link-alt ms-2" style="opacity: 0.6; font-size: 0.7rem;"></i>
-</div>
-
-<script>
-// Background Indicator Manager
-const WebcamBackgroundIndicator = {
-    indicator: null,
-    snapshotCount: null,
-    lastCapture: null,
-    updateInterval: null,
-
-    init() {
-        this.indicator = document.getElementById('webcamBackgroundIndicator');
-        this.snapshotCount = document.getElementById('bgSnapshotCount');
-        this.lastCapture = document.getElementById('bgLastCapture');
-
-        // Start monitoring
-        this.startMonitoring();
-    },
-
-    startMonitoring() {
-        // Check every second
-        this.updateInterval = setInterval(() => {
-            this.updateDisplay();
-        }, 1000);
-    },
-
-    updateDisplay() {
-        if (window.WebcamManager && window.WebcamManager.isActive) {
-            // Show indicator
-            this.indicator.style.display = 'flex';
-
-            // Update snapshot count
-            this.snapshotCount.textContent = window.WebcamManager.snapshotCount;
-
-            // Update last capture time (format as HH:MM:SS)
-            const lastUploadEl = document.getElementById('lastUpload');
-            if (lastUploadEl && lastUploadEl.textContent !== 'Never') {
-                this.lastCapture.textContent = lastUploadEl.textContent;
-            } else {
-                this.lastCapture.textContent = '--:--';
-            }
-
-            // Add auto-capture badge if active
-            if (window.WebcamManager.autoCapture) {
-                if (!this.indicator.querySelector('.auto-badge')) {
-                    const badge = document.createElement('span');
-                    badge.className = 'auto-badge';
-                    badge.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Auto';
-                    badge.style.cssText = 'background: rgba(35,39,42,0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; margin-left: 8px;';
-                    this.indicator.insertBefore(badge, this.indicator.querySelector('.stats'));
-                }
-            } else {
-                const badge = this.indicator.querySelector('.auto-badge');
-                if (badge) badge.remove();
-            }
-        } else {
-            // Hide indicator
-            this.indicator.style.display = 'none';
-        }
-    },
-
-    destroy() {
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval);
-        }
-    }
-};
-
-// Helper function to open modal
-function openWebcamModal() {
-    const modal = new bootstrap.Modal(document.getElementById('webcamManagerModal'));
-    modal.show();
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    WebcamBackgroundIndicator.init();
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', function() {
-    WebcamBackgroundIndicator.destroy();
-});
-</script>
-                </div>
-                <div>
                     <button class="btn btn-sm btn-outline-light" onclick="window.location.href='/dm/campaignSelect'">
                         <i class="fas fa-arrow-left me-1"></i> Back to Campaigns
                     </button>
                 </div>
+
             </div>
         </div>
     </nav>
 
-    <!-- Main Dashboard -->
     <div class="dashboard-container">
         <div class="row">
-            <!-- Left Column -->
             <div class="col-lg-4">
-                <!-- Session Code -->
                 <div class="session-code-box">
                     <h5><i class="fas fa-key me-2"></i>Session Join Code</h5>
                     <div class="session-code" id="sessionCode">------</div>
@@ -225,7 +74,6 @@ window.addEventListener('beforeunload', function() {
                     <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Share this code with players to join</p>
                 </div>
 
-                <!-- Active Players -->
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-users me-2"></i>Active Players
@@ -239,7 +87,6 @@ window.addEventListener('beforeunload', function() {
                     </div>
                 </div>
 
-                <!-- Session Controls -->
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-sliders-h me-2"></i>Session Controls
@@ -255,9 +102,7 @@ window.addEventListener('beforeunload', function() {
                 </div>
             </div>
 
-            <!-- Middle Column -->
             <div class="col-lg-5">
-                <!-- Game Log -->
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-scroll me-2"></i>Game Log
@@ -279,7 +124,6 @@ window.addEventListener('beforeunload', function() {
                     </div>
                 </div>
 
-                <!-- Map Controller -->
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-map me-2"></i>Map Controller
@@ -304,9 +148,7 @@ window.addEventListener('beforeunload', function() {
                 </div>
             </div>
 
-            <!-- Right Column -->
             <div class="col-lg-3">
-                <!-- Player Vitals -->
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-heart-pulse me-2"></i>Player Vitals
@@ -322,7 +164,6 @@ window.addEventListener('beforeunload', function() {
         </div>
     </div>
 
-    <!-- End Session Confirmation Modal -->
     <div class="modal fade" id="endSessionModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background-color: #23272a; color: #ffffff;">
@@ -346,12 +187,10 @@ window.addEventListener('beforeunload', function() {
         </div>
     </div>
     
-    <!-- espcam model -->
     <div class="modal fade" id="cameraManagerModal" tabindex="-1" aria-labelledby="cameraManagerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
                 
-                <!-- Modal Header -->
                 <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
                     <h5 class="modal-title" id="cameraManagerModalLabel">
                         <i class="fas fa-robot me-2"></i>Camera Manager
@@ -359,27 +198,22 @@ window.addEventListener('beforeunload', function() {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <!-- Modal Body -->
                 <div class="modal-body p-4">
                     <div class="row">
                         
-                        <!-- Left Column: Video Feed -->
                         <div class="col-lg-8 mb-4 mb-lg-0">
                             <div class="camera-feed-container" style="position: relative; background-color: #2c2f33; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;">
                                 
-                                <!-- Status Badge Overlay -->
                                 <div id="cameraStatus" class="status-badge status-disconnected" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
                                     <i class="fas fa-circle me-1"></i>Disconnected
                                 </div>
                                 
-                                <!-- Placeholder (shown when disconnected) -->
                                 <div class="camera-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #72767d;">
                                     <i class="fas fa-video-slash" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
                                     <p style="font-size: 1.2rem; margin: 0;">Waiting for connection...</p>
                                     <small style="opacity: 0.7;">Camera feed will appear here when connected</small>
                                 </div>
                                 
-                                <!-- Video Feed (hidden by default) -->
                                 <img id="cameraFeed" 
                                     src="" 
                                     alt="Camera Feed" 
@@ -387,7 +221,6 @@ window.addEventListener('beforeunload', function() {
                             </div>
                         </div>
                         
-                        <!-- Right Column: Control Panel -->
                         <div class="col-lg-4">
                             <div class="control-panel" style="background-color: #2c2f33; border-radius: 10px; padding: 20px; height: 100%; display: flex; flex-direction: column;">
                                 
@@ -395,14 +228,12 @@ window.addEventListener('beforeunload', function() {
                                     <i class="fas fa-sliders-h me-2"></i>Controls
                                 </h6>
                                 
-                                <!-- Primary Action Button -->
                                 <button id="connectCameraBtn" 
                                         class="btn btn-primary w-100 mb-3" 
                                         style="padding: 15px; font-size: 1rem; font-weight: 600; background-color: #5865f2; border: none;">
                                     <i class="fas fa-search me-2"></i>Find & Connect Camera
                                 </button>
                                 
-                                <!-- Disconnect Button -->
                                 <button id="disconnectCameraBtn" 
                                         class="btn btn-danger w-100 mb-4" 
                                         style="padding: 15px; font-size: 1rem; font-weight: 600;" 
@@ -410,7 +241,6 @@ window.addEventListener('beforeunload', function() {
                                     <i class="fas fa-stop me-2"></i>Disconnect
                                 </button>
                                 
-                                <!-- Status Information -->
                                 <div style="flex: 1; background-color: #23272a; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                                     <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
                                         <i class="fas fa-info-circle me-2"></i>Status
@@ -421,7 +251,6 @@ window.addEventListener('beforeunload', function() {
                                     </div>
                                 </div>
                                 
-                                <!-- Connection Info -->
                                 <div style="background-color: #23272a; border-radius: 8px; padding: 15px;">
                                     <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
                                         <i class="fas fa-network-wired me-2"></i>Connection Info
@@ -448,7 +277,6 @@ window.addEventListener('beforeunload', function() {
                     </div>
                 </div>
                 
-                <!-- Modal Footer -->
                 <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
                     <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
                         <i class="fas fa-lightbulb me-2"></i>
@@ -461,13 +289,10 @@ window.addEventListener('beforeunload', function() {
         </div>
     </div>
 
-    <!-- webcam model -->
-    
     <div class="modal fade" id="webcamManagerModal" tabindex="-1" aria-labelledby="webcamManagerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
                 
-                <!-- Modal Header -->
                 <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
                     <h5 class="modal-title" id="webcamManagerModalLabel">
                         <i class="fas fa-camera me-2"></i>Local Webcam Manager
@@ -475,38 +300,31 @@ window.addEventListener('beforeunload', function() {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <!-- Modal Body -->
                 <div class="modal-body p-4">
                     <div class="row">
                         
-                        <!-- Left Column: Video Feed -->
                         <div class="col-lg-8 mb-4 mb-lg-0">
                             <div class="webcam-feed-container" style="position: relative; background-color: #2c2f33; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;">
                                 
-                                <!-- Status Badge Overlay -->
                                 <div id="webcamStatus" class="status-badge status-disconnected" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
                                     <i class="fas fa-circle me-1"></i>Inactive
                                 </div>
                                 
-                                <!-- Placeholder (shown when inactive) -->
                                 <div class="webcam-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #72767d;">
                                     <i class="fas fa-camera-retro" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
                                     <p style="font-size: 1.2rem; margin: 0;">Webcam Inactive</p>
                                     <small style="opacity: 0.7;">Click "Start Webcam" to begin</small>
                                 </div>
                                 
-                                <!-- Video Element (hidden by default) -->
                                 <video id="webcamVideo" 
                                     autoplay 
                                     playsinline 
                                     style="display: none; width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1);">
                                 </video>
                                 
-                                <!-- Canvas for snapshots (hidden) -->
                                 <canvas id="snapshotCanvas" style="display: none;"></canvas>
                             </div>
                             
-                            <!-- Preview of last snapshot -->
                             <div class="mt-3" id="snapshotPreviewContainer" style="display: none;">
                                 <h6 style="color: #b9bbbe; font-size: 0.9rem;">Last Captured Snapshot:</h6>
                                 <img id="snapshotPreview" 
@@ -514,7 +332,6 @@ window.addEventListener('beforeunload', function() {
                             </div>
                         </div>
                         
-                        <!-- Right Column: Control Panel -->
                         <div class="col-lg-4">
                             <div class="control-panel" style="background-color: #2c2f33; border-radius: 10px; padding: 20px; height: 100%; display: flex; flex-direction: column;">
                                 
@@ -522,7 +339,6 @@ window.addEventListener('beforeunload', function() {
                                     <i class="fas fa-sliders-h me-2"></i>Controls
                                 </h6>
                                 
-                                <!-- Start/Stop Webcam Button -->
                                 <button id="startWebcamBtn" 
                                         class="btn btn-success w-100 mb-3" 
                                         style="padding: 15px; font-size: 1rem; font-weight: 600;">
@@ -535,7 +351,6 @@ window.addEventListener('beforeunload', function() {
                                     <i class="fas fa-stop me-2"></i>Stop Webcam
                                 </button>
                                 
-                                <!-- Capture Snapshot Button -->
                                 <button id="captureSnapshotBtn" 
                                         class="btn btn-primary w-100 mb-4" 
                                         style="padding: 15px; font-size: 1rem; font-weight: 600; background-color: #5865f2; border: none;" 
@@ -543,7 +358,6 @@ window.addEventListener('beforeunload', function() {
                                     <i class="fas fa-camera me-2"></i>Capture & Upload
                                 </button>
                                 
-                                <!-- Auto-capture toggle -->
                                 <div class="mb-4" style="background-color: #23272a; border-radius: 8px; padding: 15px;">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="autoCapture" disabled>
@@ -553,7 +367,6 @@ window.addEventListener('beforeunload', function() {
                                     </div>
                                 </div>
                                 
-                                <!-- Status Information -->
                                 <div style="flex: 1; background-color: #23272a; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                                     <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
                                         <i class="fas fa-info-circle me-2"></i>Status
@@ -564,7 +377,6 @@ window.addEventListener('beforeunload', function() {
                                     </div>
                                 </div>
                                 
-                                <!-- Statistics -->
                                 <div style="background-color: #23272a; border-radius: 8px; padding: 15px;">
                                     <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
                                         <i class="fas fa-chart-line me-2"></i>Statistics
@@ -591,7 +403,6 @@ window.addEventListener('beforeunload', function() {
                     </div>
                 </div>
                 
-                <!-- Modal Footer -->
                 <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
                     <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
                         <i class="fas fa-info-circle me-2"></i>
@@ -606,13 +417,11 @@ window.addEventListener('beforeunload', function() {
         </div>
     </div>
 
-
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/dmDashboard.js"></script>
     <script src="/static/js/dm_camera.js"></script>
     <script src="/static/js/dm_webcam.js"></script>
-
+    <script src="/static/js/dm_webcam_background.js"></script>
 
 </body>
 </html>

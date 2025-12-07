@@ -1,0 +1,69 @@
+.webcam-background-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #57f287 0%, #3ca374 100%);
+    color: #23272a;
+    padding: 12px 20px;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(87, 242, 135, 0.4);
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    z-index: 9998;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.webcam-background-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(87, 242, 135, 0.5);
+}
+
+.webcam-background-indicator i.recording-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #ed4245;
+    border-radius: 50%;
+    display: inline-block;
+    animation: recording-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(87, 242, 135, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(87, 242, 135, 0.6);
+    }
+}
+
+@keyframes recording-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+}
+
+.webcam-background-indicator .stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 8px;
+    padding-left: 12px;
+    border-left: 2px solid rgba(35, 39, 42, 0.3);
+}
+
+.webcam-background-indicator .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+}
