@@ -27,8 +27,8 @@
                     
                     <span class="text-muted small border-end pe-3 me-1" id="campaignName">Loading...</span>
 
-                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#cameraManagerModal">
-                        <i class="fas fa-video me-1"></i> Camera Manager
+                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#espcamManagerModal">
+                        <i class="fas fa-robot me-1"></i> ESP32-CAM
                     </button>
                     
                     <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#webcamManagerModal">
@@ -288,7 +288,127 @@
             </div>
         </div>
     </div>
+    <!-- ESP32-CAM Manager Modal -->
+    <div class="modal fade" id="espcamManagerModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
+                
+                <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-robot me-2"></i>ESP32-CAM Manager
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <div class="modal-body p-4">
+                    <div class="row">
+                        
+                        <div class="col-lg-8 mb-4 mb-lg-0">
+                            <div class="espcam-feed-container" style="position: relative; background-color: #2c2f33; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;">
+                                
+                                <div id="espcamStatus" class="status-badge status-disconnected" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
+                                    <i class="fas fa-circle me-1"></i>Inactive
+                                </div>
+                                
+                                <div class="espcam-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #72767d;">
+                                    <i class="fas fa-robot" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                                    <p style="font-size: 1.2rem; margin: 0;">ESP32-CAM Inactive</p>
+                                    <small style="opacity: 0.7;">Click "Connect" to start stream</small>
+                                </div>
+                                
+                                <img id="espcamStream" 
+                                alt="ESP32-CAM Stream" 
+                                style="display: none; width: 100%; height: 100%; object-fit: contain;">
 
+                                
+                                <canvas id="espcamSnapshotCanvas" style="display: none;"></canvas>
+                            </div>
+                            
+                            <div class="mt-3" id="espcamSnapshotPreviewContainer" style="display: none;">
+                                <h6 style="color: #b9bbbe; font-size: 0.9rem;">Last Captured Snapshot:</h6>
+                                <img id="espcamSnapshotPreview" 
+                                    style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; background-color: #1a1a1a; border: 1px solid #4f545c;">
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="control-panel" style="background-color: #2c2f33; border-radius: 10px; padding: 20px;">
+                                
+                                <h6 style="color: #ffffff; margin-bottom: 20px; font-weight: 600;">
+                                    <i class="fas fa-sliders-h me-2"></i>Controls
+                                </h6>
+                                
+                                <button id="connectESPCamBtn" class="btn btn-success w-100 mb-3" style="padding: 15px;">
+                                    <i class="fas fa-plug me-2"></i>Connect to Stream
+                                </button>
+                                
+                                <button id="disconnectESPCamBtn" class="btn btn-danger w-100 mb-3" style="padding: 15px; display: none;">
+                                    <i class="fas fa-stop me-2"></i>Disconnect
+                                </button>
+                                
+                                <button id="captureESPSnapshotBtn" class="btn btn-primary w-100 mb-4" style="padding: 15px;" disabled>
+                                    <i class="fas fa-camera me-2"></i>Capture & Upload
+                                </button>
+                                
+                                <div class="mb-4" style="background-color: #23272a; border-radius: 8px; padding: 15px;">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="espcamAutoCapture" disabled>
+                                        <label class="form-check-label" for="espcamAutoCapture" style="color: #b9bbbe;">
+                                            Auto-capture every 3 seconds
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div style="background-color: #23272a; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                                    <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px;">
+                                        <i class="fas fa-info-circle me-2"></i>Status
+                                    </h6>
+                                    <div id="espcamStatusMessage" style="color: #b9bbbe; font-size: 0.85rem;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <span>Power on your ESP32-CAM and click "Connect".</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="background-color: #23272a; border-radius: 8px; padding: 15px;">
+                                    <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px;">
+                                        <i class="fas fa-chart-line me-2"></i>Statistics
+                                    </h6>
+                                    <div style="font-size: 0.8rem; color: #8e9297;">
+                                        <div style="margin-bottom: 8px;">
+                                            <strong style="color: #b9bbbe;">Camera IP:</strong>
+                                            <span id="espcamIP" style="color: #72767d;">Not connected</span>
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <strong style="color: #b9bbbe;">Snapshots:</strong>
+                                            <span id="espcamSnapshotCount" style="color: #72767d;">0</span>
+                                        </div>
+                                        <div>
+                                            <strong style="color: #b9bbbe;">Last Upload:</strong>
+                                            <span id="espcamLastUpload" style="color: #72767d;">Never</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
+                    <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Stream runs in background when modal is closed.
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-minimize me-2"></i>Minimize
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <!-- WEBCAM Manager Modal -->
     <div class="modal fade" id="webcamManagerModal" tabindex="-1" aria-labelledby="webcamManagerModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
@@ -422,6 +542,8 @@
     <script src="/static/js/dm_camera.js"></script>
     <script src="/static/js/dm_webcam.js"></script>
     <script src="/static/js/dm_webcam_background.js"></script>
+    <script src="/static/js/dm_espcam.js"></script>
+
 
 </body>
 </html>
