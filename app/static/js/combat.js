@@ -422,6 +422,123 @@ async function addAbility() {
 }
 
 /**
+ * Import Abilities using D&D 5e API
+ */
+async function importAbilities() {
+    const classSelect = document.querySelector('input[name="classSelect"]:checked');
+    const levelInput = document.getElementById('importLevel');
+    
+    if (!classSelect || !levelInput.value) {
+        showError('Please select a class and level');
+        return;
+    }
+    
+    const className = classSelect.value;
+    const level = parseInt(levelInput.value);
+    
+    // Hide modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('importAbilitiesModal'));
+    modal.hide();
+    
+    showLoading(true);
+    
+    try {
+        // Fetch class levels progression (this includes features for each level)
+        const levelsResponse = await fetch(`https://www.dnd5eapi.co/api/classes/${className}/levels`);
+        if (!levelsResponse.ok) throw new Error('Failed to fetch class data');
+        
+        const allLevels = await levelsResponse.json();
+        
+        // Filter levels up to user selection
+        const relevantLevels = allLevels.filter(l => l.level <= level);
+        
+        // 3. Collect unique features URL
+        const featureUrls = new Set();
+        const featuresToFetch = [];
+        
+        relevantLevels.forEach(lvl => {
+            if (lvl.features && lvl.features.length > 0) {
+                lvl.features.forEach(feature => {
+                    if (!featureUrls.has(feature.url)) {
+                        featureUrls.add(feature.url);
+                        featuresToFetch.push({
+                            name: feature.name,
+                            url: feature.url
+                        });
+                    }
+                });
+            }
+        });
+        
+        if (featuresToFetch.length === 0) {
+            showSuccess('No abilities found for this level.');
+            showLoading(false);
+            return;
+        }
+        
+        // Fetch details for each feature to get the description
+        let addedCount = 0;
+        
+        // Process in batches or parallel
+        const featurePromises = featuresToFetch.map(async (featureRef) => {
+            // Check for duplicates in existing data first to save API calls (optional, but robust)
+            // But user said "if currently ability with same name, pass".
+            // We check against combatData.classAbilities
+            const exists = combatData.classAbilities.some(a => a.name.toLowerCase() === featureRef.name.toLowerCase());
+            if (exists) return null;
+
+            const detailResponse = await fetch(`https://www.dnd5eapi.co${featureRef.url}`);
+            if (!detailResponse.ok) return null;
+            
+            const detailData = await detailResponse.json();
+            
+            // Format description
+            let description = '';
+            if (Array.isArray(detailData.desc)) {
+                description = detailData.desc.join('\n\n');
+            } else {
+                description = detailData.desc || 'No description available.';
+            }
+            
+            // Create Summary (first sentence or truncated)
+            let summary = description.split('.')[0] + '.';
+            if (summary.length > 100) summary = summary.substring(0, 97) + '...';
+            
+            return {
+                type: 'passive', // Default per request
+                name: detailData.name,
+                summary: summary,
+                description: description,
+                // Default active fields (hidden but initialized)
+                range: 'Self',
+                actionCost: 'Action',
+                maxUses: 1,
+                usesLeft: 1
+            };
+        });
+        
+        const newAbilities = (await Promise.all(featurePromises)).filter(a => a !== null);
+        
+        // Add to combatData
+        if (newAbilities.length > 0) {
+            combatData.classAbilities.push(...newAbilities);
+            await saveCombatData();
+            renderAbilities();
+            showSuccess(`Successfully imported ${newAbilities.length} abilities.`);
+        } else {
+            showSuccess('No new abilities to import (duplicates skipped).');
+        }
+        
+    } catch (error) {
+        console.error('Import error:', error);
+        showError('Failed to import abilities. Please check your connection.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+
+/**
  * Show loading state
  */
 function showLoading(show) {
