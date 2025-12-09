@@ -60,9 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //
-    // --- ADD THIS NEW SIGN UP LOGIC ---
-    //
+
     const signUpForm = document.getElementById('signUpForm');
     const signUpButton = document.getElementById('signUpButton');
     const signUpError = document.getElementById('signUpError');
@@ -77,14 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
             signUpButton.textContent = 'Creating Account...';
             signUpError.style.display = 'none';
 
-            // 1. Create the user in Firebase Auth
+            //  Create the user in Firebase Auth
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // 2. User created, now get their token
+                    //  User created, get their token
                     return userCredential.user.getIdToken();
                 })
                 .then((idToken) => {
-                    // 3. Send this token to our new /api/auth/signup endpoint
+                    // Send this token to our new /api/auth/signup endpoint
                     return fetch('/api/auth/signup', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -97,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .then(data => {
                     if (data.status === 'success') {
-                        // 4. Server created the DB entry and session. Redirect.
+                        // Server created the DB entry and session. Redirect.
                         window.location.href = '/player/characterSelect';
                     } else {
                         throw new Error(data.message || 'Unknown server error');

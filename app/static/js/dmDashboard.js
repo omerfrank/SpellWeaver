@@ -176,9 +176,7 @@ async function loadPlayerVitals(players) {
             .map(async ([playerId, player]) => { // <-- 'playerId' is available here!
                 try {
                     
-                    // ===== THIS IS THE CHANGED LINE =====
                     const charResponse = await fetch(`/dm/api/character/${playerId}/${player.selected_character_id}`);
-                    // ====================================
 
                     const charResult = await charResponse.json();
                     

@@ -138,7 +138,7 @@ const WebcamManager = {
             this.elements.captureBtn.disabled = false;
             this.elements.autoCapture.disabled = false;
             
-            console.log('✅ Webcam started successfully');
+            console.log('Webcam started successfully');
             
         } catch (error) {
             console.error('❌ Failed to start webcam:', error);
@@ -174,10 +174,10 @@ const WebcamManager = {
             this.elements.captureBtn.disabled = true;
             this.elements.autoCapture.disabled = true;
             
-            console.log('⏹️ Webcam stopped');
+            console.log(' Webcam stopped');
             
         } catch (error) {
-            console.error('❌ Error stopping webcam:', error);
+            console.error(' Error stopping webcam:', error);
         }
     },
 
@@ -271,7 +271,7 @@ const WebcamManager = {
                 this.captureAndUpload();
             }, this.captureIntervalMs);
             
-            console.log('🔄 Auto-capture enabled');
+            console.log('Auto-capture enabled');
         } else {
             // Stop interval
             if (this.captureInterval) {
@@ -279,7 +279,7 @@ const WebcamManager = {
                 this.captureInterval = null;
             }
             
-            console.log('⏸️ Auto-capture disabled');
+            console.log('Auto-capture disabled');
         }
     },
 
@@ -384,7 +384,7 @@ const WebcamManager = {
      */
     restoreBackgroundState() {
         if (this.isActive && this.stream) {
-            console.log('🔄 Restoring webcam UI state');
+            console.log('Restoring webcam UI state');
             
             // Video should still be connected
             this.elements.video.style.display = 'block';
