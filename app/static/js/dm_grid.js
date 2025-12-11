@@ -3,7 +3,7 @@
 // ============================================
 const CONFIG = {
     GRID_ROWS: 8,
-    GRID_COLS: 10,
+    GRID_COLS: 12,
     GRID_LINE_WIDTH: 4,
     GRID_COLOR: '#ffffff',
     POLL_INTERVAL: 2000,
