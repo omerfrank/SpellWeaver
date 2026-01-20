@@ -19,6 +19,52 @@ let spellData = {
 
 let currentSpell = null;
 let isLoading = false;
+async function calculateSpellStats() {
+    const characterId = localStorage.getItem('selectedCharacterId');
+    
+    if (!characterId || !spellData.spellcastingAbility) {
+        return;
+    }
+    
+    try {
+        // Fetch character data to get ability scores and proficiency bonus
+        const response = await fetch(`/api/game/character/${characterId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+            const character = result.character;
+            
+            // Get the spellcasting ability score
+            const abilityScore = character.abilities[spellData.spellcastingAbility.toLowerCase()]?.score || 10;
+            
+            // Calculate ability modifier
+            const abilityModifier = Math.floor((abilityScore - 10) / 2);
+            
+            // Get proficiency bonus (default to +2 if not set)
+            const proficiencyBonus = character.proficiencyBonus || 2;
+            
+            // Calculate Spell Save DC = 8 + proficiency + ability modifier
+            spellData.spellDC = 8 + proficiencyBonus + abilityModifier;
+            
+            // Calculate Spell Attack Bonus = proficiency + ability modifier
+            spellData.spellAttack = proficiencyBonus + abilityModifier;
+            
+            // Save and render
+            await saveSpellStats();
+            renderUI();
+            
+            console.log(`Spell stats calculated: DC=${spellData.spellDC}, Attack=${spellData.spellAttack}`);
+        }
+    } catch (error) {
+        console.error('Error calculating spell stats:', error);
+    }
+}
 
 /**
  * Initialize the page
@@ -28,10 +74,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up ability select change handler
     const abilitySelect = document.getElementById('abilitySelect');
+    // if (abilitySelect) {
+    //     abilitySelect.addEventListener('change', function() {
+    //         spellData.spellcastingAbility = this.value;
+    //         saveSpellStats();
+    //     });
+    // }
     if (abilitySelect) {
-        abilitySelect.addEventListener('change', function() {
+        abilitySelect.addEventListener('change', async function() {
             spellData.spellcastingAbility = this.value;
-            saveSpellStats();
+            
+            // Auto-calculate when ability is selected
+            await calculateSpellStats();
         });
     }
 });
@@ -58,7 +112,6 @@ async function loadData() {
         });
         
         const result = await response.json();
-        console.log(result);
         
         if (response.ok && result.status === 'success') {
             if (result.spells) {
@@ -71,20 +124,24 @@ async function loadData() {
                     }
                 }
             }
+            
             renderUI();
+            
+            // Auto-calculate spell stats if ability is selected
+            if (spellData.spellcastingAbility) {
+                await calculateSpellStats();
+            }
         } else {
             throw new Error(result.message || 'Failed to load spells');
         }
     } catch (error) {
         console.error('Error loading spells:', error);
         showError(`Failed to load spells: ${error.message}`);
-        // Still render with default data
         renderUI();
     } finally {
         showLoading(false);
     }
 }
-
 /**
  * Save complete spell data to server
  */
