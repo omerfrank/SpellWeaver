@@ -17,7 +17,6 @@ const availableImages = [
     '/static/img/warlock2.webp',
     '/static/img/zombie.webp',
     
-    // Add more images as needed
 ];
 
 let selectedImage = null;
@@ -130,7 +129,6 @@ async function createCharacter() {
     };
 
     try {
-        // Call your Flask API
         const response = await fetch('/api/game/createCharacter', {
             method: 'POST',
             headers: {

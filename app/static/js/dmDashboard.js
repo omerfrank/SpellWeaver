@@ -97,44 +97,34 @@ function updateActivePlayers(players) {
             </div>
         `;
         playerCount.textContent = '0';
-        g_activePlayerIds = new Set(); // Clear the set if no players
+        g_activePlayerIds = new Set(); 
         return;
     }
 
-    // Get a Set of all *currently* connected player IDs
+    // Get a Set of all current player IDs
     const newConnectedPlayerIds = new Set(
         Object.entries(players)
               .filter(([_, player]) => player.connection_status === 'connected')
               .map(([playerId, _]) => playerId)
     );
-
-    // --- NEW LOGIC TO FIND NEW/DISCONNECTED PLAYERS ---
-
-    // 1. Find newly connected players
-    // (Players in the new set but not in the old 'g_activePlayerIds' set)
+    // Find newly connected players
     for (const playerId of newConnectedPlayerIds) {
         if (!g_activePlayerIds.has(playerId)) {
-            // This is a new player
+            // new player
             const playerName = players[playerId]?.display_name || 'Unknown Player';
             addLogEntry(`${playerName} has connected.`, 'system');
         }
     }
 
-    // 2. Find disconnected players (Optional, but good to have)
-    // (Players who were in the old set but are NOT in the new set)
+    // disconnected players
     for (const playerId of g_activePlayerIds) {
         if (!newConnectedPlayerIds.has(playerId)) {
-            // This player disconnected
-            // We need the player's name from the *full* players object
             const playerName = players[playerId]?.display_name || 'Unknown Player';
             addLogEntry(`${playerName} has disconnected.`, 'system');
         }
     }
 
-    // 3. Update the global set for the next refresh
     g_activePlayerIds = newConnectedPlayerIds;
-
-    // --- END NEW LOGIC ---
 
     // Update the player count text
     playerCount.textContent = newConnectedPlayerIds.size;

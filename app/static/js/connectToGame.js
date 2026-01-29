@@ -130,7 +130,7 @@ function setupGameCodeInput() {
     const input = document.getElementById('gameCodeInput');
     
     input.addEventListener('input', function(e) {
-        // Only allow alphanumeric characters
+        // sanitaize input
         this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         
         // Limit to 6 characters

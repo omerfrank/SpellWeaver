@@ -175,7 +175,7 @@ async function clearEffects() {
 function redrawEffects() {
     ctx2.clearRect(0, 0, layer2.width, layer2.height);
     
-    // 1. SERVER EFFECTS (Draw first so they are below UI interactions)
+    //SERVER EFFECTS (Draw first so they are below UI interactions)
     if (STATE.serverEffects) {
         Object.values(STATE.serverEffects).forEach(effect => {
             if (effect.type === 'radius' && effect.metadata) {
@@ -186,7 +186,7 @@ function redrawEffects() {
         });
     }
 
-    // 2. FOG (Bottom Layer)
+    // FOG (Bottom Layer)
     if (STATE.fogImageLoaded && STATE.fogPattern) {
         ctx2.fillStyle = STATE.fogPattern;
     } else {

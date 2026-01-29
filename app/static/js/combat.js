@@ -452,7 +452,7 @@ async function importAbilities() {
         // Filter levels up to user selection
         const relevantLevels = allLevels.filter(l => l.level <= level);
         
-        // 3. Collect unique features URL
+        // Collect unique features URL
         const featureUrls = new Set();
         const featuresToFetch = [];
         
@@ -481,9 +481,7 @@ async function importAbilities() {
         
         // Process in batches or parallel
         const featurePromises = featuresToFetch.map(async (featureRef) => {
-            // Check for duplicates in existing data first to save API calls (optional, but robust)
-            // But user said "if currently ability with same name, pass".
-            // We check against combatData.classAbilities
+            // Check for duplicates in existing data first to save API calls
             const exists = combatData.classAbilities.some(a => a.name.toLowerCase() === featureRef.name.toLowerCase());
             if (exists) return null;
 
@@ -505,7 +503,7 @@ async function importAbilities() {
             if (summary.length > 100) summary = summary.substring(0, 97) + '...';
             
             return {
-                type: 'passive', // Default per request
+                type: 'passive', 
                 name: detailData.name,
                 summary: summary,
                 description: description,

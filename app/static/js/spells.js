@@ -74,12 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up ability select change handler
     const abilitySelect = document.getElementById('abilitySelect');
-    // if (abilitySelect) {
-    //     abilitySelect.addEventListener('change', function() {
-    //         spellData.spellcastingAbility = this.value;
-    //         saveSpellStats();
-    //     });
-    // }
     if (abilitySelect) {
         abilitySelect.addEventListener('change', async function() {
             spellData.spellcastingAbility = this.value;

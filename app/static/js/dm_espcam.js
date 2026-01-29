@@ -39,7 +39,7 @@ const ESPCamManager = {
     cacheElements() {
         this.elements = {
             modal: document.getElementById('espcamManagerModal'),
-            stream: document.getElementById('espcamStream'), // Changed from 'video' to 'stream'
+            stream: document.getElementById('espcamStream'),
             canvas: document.getElementById('espcamSnapshotCanvas'),
             placeholder: document.querySelector('.espcam-placeholder'),
             statusBadge: document.getElementById('espcamStatus'),
@@ -83,7 +83,7 @@ const ESPCamManager = {
         // Keep stream running when modal closes
         this.elements.modal.addEventListener('hidden.bs.modal', () => {
             if (this.isActive) {
-                console.log('ℹ️ Modal closed, ESP32-CAM continues in background');
+                console.log('Modal closed, ESP32-CAM continues in background');
                 this.showBackgroundNotification();
             }
         });
@@ -96,7 +96,7 @@ const ESPCamManager = {
         try {
             this.updateStatus('starting', 'Discovering ESP32-CAM...');
             
-            // 1. Discover camera IP from server
+            // get camera ip
             const discoverResponse = await fetch('/api/espcam/discover');
             const discoverResult = await discoverResponse.json();
             
@@ -107,9 +107,9 @@ const ESPCamManager = {
             this.cameraIp = discoverResult.camera_ip;
             this.streamUrl = discoverResult.stream_url;
             
-            console.log('✅ Found ESP32-CAM at:', this.cameraIp);
+            console.log('Found ESP32-CAM at:', this.cameraIp);
             
-            // 2. Activate on server
+            // tell the server about activation
             const activateResponse = await fetch('/api/espcam/activate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -121,11 +121,11 @@ const ESPCamManager = {
                 throw new Error(activateResult.message);
             }
             
-            // 3. Connect img element directly to ESP32-CAM MJPEG stream
+            // Connect img element directly to ESP32-CAM MJPEG stream
             // Add cache-busting parameter to force fresh connection
             const streamUrl = this.streamUrl + '?t=' + Date.now();
             
-            console.log('🔗 Connecting to stream:', streamUrl);
+            console.log('Connecting to stream:', streamUrl);
             
             // Set the image source
             this.elements.stream.src = streamUrl;
@@ -138,7 +138,7 @@ const ESPCamManager = {
                 
                 this.elements.stream.onload = () => {
                     clearTimeout(loadTimeout);
-                    console.log('✅ Stream image loaded successfully');
+                    console.log('Stream image loaded successfully');
                     resolve();
                 };
                 
@@ -161,7 +161,7 @@ const ESPCamManager = {
             this.elements.captureBtn.disabled = false;
             this.elements.autoCapture.disabled = false;
             
-            console.log('✅ ESP32-CAM stream connected');
+            console.log('ESP32-CAM stream connected');
             
         } catch (error) {
             console.error('❌ Failed to connect to ESP32-CAM:', error);
@@ -301,14 +301,14 @@ const ESPCamManager = {
                 this.captureAndUpload();
             }, this.captureIntervalMs);
             
-            console.log('🔄 ESP32-CAM auto-capture enabled');
+            console.log('ESP32-CAM auto-capture enabled');
         } else {
             if (this.captureInterval) {
                 clearInterval(this.captureInterval);
                 this.captureInterval = null;
             }
             
-            console.log('⏸️ ESP32-CAM auto-capture disabled');
+            console.log('ESP32-CAM auto-capture disabled');
         }
     },
 

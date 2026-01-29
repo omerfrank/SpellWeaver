@@ -135,26 +135,20 @@ function updateUIWithCharacterData() {
 }
 function processString(inputStr) {
   
-  // 1. Find all numbers (sequences of digits)
+  // Find all numbers (sequences of digits)
   // The 'g' flag means 'global' (find all matches)
-  // We use || [] to ensure we have an empty array if no numbers are found
   const numbers = inputStr.match(/\d+/g) || [];
   
-  // 2. Calculate the sum
+  // Calculate the sum
   // .reduce() iterates over the array of number strings
   // parseInt() converts each string to an integer
   // 'acc' is the 'accumulator' (the running total), starting at 0
   const sum = numbers.reduce((acc, numStr) => acc + parseInt(numStr, 10), 0);
   
-  // 3. Find all words (sequences of letters)
-  // [a-zA-Z] matches any letter from a-z, upper or lower case
-  // + means "one or more"
+  // Find all words (sequences of letters)
   const words = inputStr.match(/[a-zA-Z]+/g) || [];
-  
-  // 4. Join all found words with a comma
   const wordString = words.join(',');
   
-  // 5. Return both values as an object
   return {
     sum: sum,
     words: wordString

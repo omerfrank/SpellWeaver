@@ -1,5 +1,3 @@
-// TODO: Replace this with your project's Firebase configuration
-// You can find this in your Firebase project console settings
 const firebaseConfig = {
     apiKey: "AIzaSyCMDy-YG7RJuV5ljhccuf9wpz9RhDGEW9g",
     authDomain: "spell-weaver-257d8.firebaseapp.com",

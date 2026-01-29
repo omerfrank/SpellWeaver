@@ -73,7 +73,7 @@ async function loadAllNotes() {
 }
 
 /**
- * Collects all notes and saves them to the Flask server (which saves to Firebase).
+ * Collects all notes and saves them to server
  */
 async function saveAllNotes() {
     const btn = document.querySelector('.save-btn');
@@ -92,19 +92,19 @@ async function saveAllNotes() {
         }, 2000);
         return;
     }
-    // 1. Collect all data from the textareas
+    // Collect all data from the textareas
     const notesData = {};
     textareas.forEach(textarea => {
         const element = document.getElementById(textarea.id);
         notesData[textarea.id] = element.value;
     });
 
-    // 2. Show "Saving..." feedback
+    // Show "Saving..." feedback
     btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Saving...';
     btn.disabled = true; // Disable button to prevent multiple clicks
 
     try {
-        // 3. Send the data to the server
+        // Send the data to the server
         // This endpoint needs to be created in your Flask app
         const response = await fetch(`/api/game/saveBackground/${characterId}`, {
             method: 'POST',
@@ -120,7 +120,7 @@ async function saveAllNotes() {
 
         const result = await response.json();
 
-        // 4. Show success feedback
+        // Show success feedback
         if (response.ok && result.status === 'success') {
             btn.innerHTML = '<i class="bi bi-check-circle"></i> Saved!';
             btn.style.backgroundColor = '#4ade80';
@@ -130,16 +130,15 @@ async function saveAllNotes() {
 
     } catch (error) {
         console.error("Failed to save notes:", error);
-        // 5. Show error feedback
         btn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error!';
         btn.style.backgroundColor = '#f87171'; // A red color
     
     } finally {
-        // 6. Revert button text after 2 seconds
+        // Revert button text after 2 seconds
         setTimeout(() => {
             btn.innerHTML = originalText;
-            btn.style.backgroundColor = '#ff80ed'; // Original color
-            btn.disabled = false; // Re-enable button
+            btn.style.backgroundColor = '#ff80ed';
+            btn.disabled = false;
         }, 2000);
     }
 }
