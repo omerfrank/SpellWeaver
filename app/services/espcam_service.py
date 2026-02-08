@@ -125,7 +125,7 @@ class ESPCamService:
         self.last_snapshot = None
         self.last_snapshot_time = None
         
-        print(f"✅ ESP32-CAM mode activated for session: {session_id}")
+        print(f"ESP32-CAM mode activated for session: {session_id}")
         
         return {
             'status': 'success',
@@ -154,7 +154,7 @@ class ESPCamService:
         self.last_snapshot = None
         self.last_snapshot_time = None
         
-        print("⏹️ ESP32-CAM mode deactivated")
+        print("ESP32-CAM mode deactivated")
         
         return {
             'status': 'success',
@@ -213,7 +213,7 @@ class ESPCamService:
             self.last_snapshot = processed_bytes
             self.last_snapshot_time = datetime.utcnow()
             
-            print(f"📸 ESP32-CAM snapshot processed: {len(processed_bytes)} bytes, {image.size}")
+            print(f"ESP32-CAM snapshot processed: {len(processed_bytes)} bytes, {image.size}")
             
             # TODO: Add game logic processing here
             # self._process_game_logic(processed_bytes)

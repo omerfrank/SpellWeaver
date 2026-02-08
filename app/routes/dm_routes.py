@@ -162,7 +162,6 @@ def create_session():
     else:
         return jsonify({'status': 'error', 'message': 'Failed to create session'}), 500
 
-# NEW ROUTE: Get session code for an active session
 @dm_bp.route('/api/session/<session_id>/code', methods=['GET'])
 @login_required
 def get_session_code(session_id):

@@ -50,7 +50,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = session # Just load from session for efficiency
+        g.user = session 
 
 def login_required(view):
     @functools.wraps(view)

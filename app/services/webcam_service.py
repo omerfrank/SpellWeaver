@@ -79,7 +79,7 @@ class WebcamService:
         self.last_snapshot = None
         self.last_snapshot_time = None
         
-        print("⏹️ Webcam mode deactivated")
+        print("Webcam mode deactivated")
         
         return {
             'status': 'success',
@@ -138,7 +138,7 @@ class WebcamService:
             self.last_snapshot = processed_bytes
             self.last_snapshot_time = datetime.utcnow()
             
-            print(f"📸 Snapshot processed: {len(processed_bytes)} bytes, {image.size}")
+            print(f" Snapshot processed: {len(processed_bytes)} bytes, {image.size}")
             
             # TODO: Add game logic processing here
             # self._process_game_logic(processed_bytes)

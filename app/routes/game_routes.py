@@ -11,7 +11,6 @@ firebase = FirebaseService() # <-- Make sure this is instantiated
 def db_test():
     """API health check"""
     
-    # --- Add this line to run the test ---
     test_result = firebase.run_test_query()
     
     return jsonify({

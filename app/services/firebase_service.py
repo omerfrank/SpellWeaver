@@ -6,8 +6,7 @@ import string
 class FirebaseService:
     def __init__(self):
         """
-        The Firebase app is already initialized in app/__init__.py.
-        We just need to get references to the database.
+        The Firebase app is initialized in app/__init__.py.
         """
         pass
     
@@ -137,7 +136,6 @@ class FirebaseService:
                         '9': {'max': 0, 'remaining': 0, 'spells': []}
                     }
                 },
-                # === END MODIFIED SPELLS STRUCTURE ===
                 'combat': {
                     'classAbilities': [],
                     'raceAbilities': []
@@ -494,7 +492,7 @@ class FirebaseService:
                 'lastPlayed': datetime.datetime.utcnow().isoformat()
             })
             
-            print(f"✅ Game session created: {session_id}")
+            print(f"Game session created: {session_id}")
             return session_id
             
         except Exception as e:
@@ -515,7 +513,7 @@ class FirebaseService:
             return session
             
         except Exception as e:
-            print(f"❌ Error getting game session: {e}")
+            print(f"Error getting game session: {e}")
             return None
 
     def save_game_session(self, session: GameSession):
@@ -541,12 +539,12 @@ class FirebaseService:
             return None
 
     def add_player_to_session(self, session_id, player_id, character_id, display_name):
-        """Add a player to an active game session using GameSession model"""
+        """Add a player to an active game session"""
         try:
             # Get session
             session = self.get_game_session(session_id)
             if not session:
-                print(f"❌ Session {session_id} not found")
+                print(f"Session {session_id} not found")
                 return False
             
             # Add player using model method
@@ -555,11 +553,11 @@ class FirebaseService:
             # Save back to Firebase
             self.save_game_session(session)
             
-            print(f"✅ Player {player_id} added to session {session_id}")
+            print(f"Player {player_id} added to session {session_id}")
             return True
             
         except Exception as e:
-            print(f"❌ Error adding player to session: {e}")
+            print(f"Error adding player to session: {e}")
             return False
 
     def assign_mini_to_player(self, session_id, player_id, mini_id):
@@ -596,7 +594,7 @@ class FirebaseService:
             if not all_sessions:
                 return {}
             
-            # Filter by DM and convert to GameSession objects
+            # Filter by DM
             dm_sessions = {}
             for session_id, data in all_sessions.items():
                 session_info = data.get('sessionInfo', {})
@@ -873,11 +871,11 @@ class FirebaseService:
             if session_code:
                 self.remove_session_code(session_code)
             
-            print(f"✅ Session {session_id} ended and code removed")
+            print(f"Session {session_id} ended and code removed")
             return True
             
         except Exception as e:
-            print(f"❌ Error ending session: {e}")
+            print(f"Error ending session: {e}")
             return False
     
     # ===== GRID MANAGEMENT METHODS =====

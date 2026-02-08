@@ -45,7 +45,6 @@ def load_showcase():
 def load_spells():
     return render_template('spells.html')
 
-# NEW: Connect to game page
 @player_bp.route('/connectToGame')
 @login_required
 def load_connect_to_game():

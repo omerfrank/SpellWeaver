@@ -18,7 +18,7 @@ def connect_to_session():
         data = request.get_json()
         session_code = data.get('session_code')
         character_id = data.get('character_id')
-        display_name = data.get('display_name')
+        display_name = data.get('display_name')      
         print(f"got json vars: {data}")
         if not session_code or not character_id or not display_name:
             return jsonify({"status": "error", "message": "Missing required data"}), 400
@@ -60,7 +60,6 @@ def connect_to_session():
         print(f"Error connecting to session: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# NEW ROUTE: Disconnect from session
 @session_bp.route('/player/disconnectFromSession', methods=['POST'])
 @login_required
 def disconnect_from_session():
@@ -88,7 +87,6 @@ def disconnect_from_session():
         print(f"Error disconnecting from session: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# NEW ROUTE: Get current session info for player
 @session_bp.route('/player/currentSession', methods=['GET'])
 @login_required
 def get_current_session():
@@ -109,7 +107,7 @@ def get_current_session():
     except Exception as e:
         print(f"Error getting current session: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-# NEW ROUTE: Get current session info for player
+
 @session_bp.route('/test', methods=['GET'])
 def test():
     return "works!"

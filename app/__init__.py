@@ -6,8 +6,7 @@ from firebase_admin import credentials
 # Import your config
 from app.config import Config
 
-# Import your route blueprints
-# (Based on your app/routes/__init__.py file)
+# Import route blueprints
 from app.routes import routes
 
 
@@ -44,8 +43,7 @@ def create_app():
 
     except Exception as e:
         app.logger.error(f"Error initializing Firebase Admin SDK: {e}")
-        # Depending on your app, you might want to exit or handle this
-        # For now, we'll just log the error
+
     
     # -------------------------------------------------
     # Register Blueprints
