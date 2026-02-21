@@ -69,6 +69,8 @@ def clear_map(session_id):
 @login_required
 def add_spell_effect(session_id):
     """Add a spell area effect to the grid."""
+    GRID_ROWS = 8
+    GRID_COLS = 10
     try:
         data = request.get_json()
         row    = data.get('row')
@@ -83,7 +85,7 @@ def add_spell_effect(session_id):
             session_id=session_id,
             user_id=label,          # reuse user_id as a label for now
             effect_type='radius',
-            x=col,                  # grid service uses x/y → col/row
+            x=(GRID_COLS - 1 - col),                  # grid service uses x/y → col/row
             y=row,
             range=1,                # range=1 → 3×3 area
             color=color
