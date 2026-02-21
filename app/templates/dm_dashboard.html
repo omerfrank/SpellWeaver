@@ -1,551 +1,960 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DM Dashboard - Quest Weaver</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <link rel="stylesheet" href="/static/css/dmDashboard.css">
-    <link rel="stylesheet" href="/static/css/dm_camera.css">
-    <link rel="stylesheet" href="/static/css/dm_webcam_background.css">
-    <link rel="stylesheet" href="/static/css/dm_soundboard.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="stylesheet" href="/static/css/dmDashboard.css" />
+    <link rel="stylesheet" href="/static/css/dm_camera.css" />
+    <link rel="stylesheet" href="/static/css/dm_webcam_background.css" />
+    <link rel="stylesheet" href="/static/css/dm_soundboard.css" />
 
-    <link rel="icon" type="image/webp" href="/static/icons/Quest_Weaver_Icon.webp">
-</head>
-<body>
+    <link
+      rel="icon"
+      type="image/webp"
+      href="/static/icons/Quest_Weaver_Icon.webp"
+    />
+  </head>
+  <body>
     <nav class="top-navbar">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center">
-                
-                <div class="d-flex align-items-center">
-                    <img src="/static/icons/Quest_Weaver_Icon.webp" style="height: 40px; width: auto; margin-right: 10px;" alt="Quest Weaver Logo">
-                    <strong>DM Dashboard</strong>
+      <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            <img
+              src="/static/icons/Quest_Weaver_Icon.webp"
+              style="height: 40px; width: auto; margin-right: 10px"
+              alt="Quest Weaver Logo"
+            />
+            <strong>DM Dashboard</strong>
+          </div>
+
+          <div class="d-flex align-items-center gap-3">
+            <span
+              class="text-muted small border-end pe-3 me-1"
+              id="campaignName"
+              >Loading...</span
+            >
+
+            <button
+              class="btn btn-outline-light btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#espcamManagerModal"
+            >
+              <i class="fas fa-robot me-1"></i> ESP32-CAM
+            </button>
+
+            <button
+              class="btn btn-outline-light btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#webcamManagerModal"
+            >
+              <i class="fas fa-camera me-1"></i> Local Webcam
+            </button>
+
+            <button
+              class="btn btn-outline-light btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#soundBoardModal"
+            >
+              <i class="fas fa-volume-up me-1"></i> Sound Board
+            </button>
+
+            <div
+              id="webcamBackgroundIndicator"
+              class="webcam-background-indicator"
+              onclick="openWebcamModal()"
+            >
+              <i class="recording-dot"></i>
+              <span>Webcam Active</span>
+              <div class="stats">
+                <div class="stat-item">
+                  <i class="fas fa-camera"></i>
+                  <span id="bgSnapshotCount">0</span>
                 </div>
-
-                <div class="d-flex align-items-center gap-3">
-                    
-                    <span class="text-muted small border-end pe-3 me-1" id="campaignName">Loading...</span>
-
-                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#espcamManagerModal">
-                        <i class="fas fa-robot me-1"></i> ESP32-CAM
-                    </button>
-                    
-                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#webcamManagerModal">
-                        <i class="fas fa-camera me-1"></i> Local Webcam
-                    </button>
-                    
-                    <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#soundBoardModal">
-                        <i class="fas fa-volume-up me-1"></i> Sound Board
-                    </button>
-                    
-                    <div id="webcamBackgroundIndicator" class="webcam-background-indicator" onclick="openWebcamModal()">
-                        <i class="recording-dot"></i>
-                        <span>Webcam Active</span>
-                        <div class="stats">
-                            <div class="stat-item">
-                                <i class="fas fa-camera"></i>
-                                <span id="bgSnapshotCount">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-clock"></i>
-                                <span id="bgLastCapture">--:--</span>
-                            </div>
-                        </div>
-                        <i class="fas fa-external-link-alt ms-2" style="opacity: 0.6; font-size: 0.7rem;"></i>
-                    </div>
-
-                    <div class="vr text-light mx-1" style="opacity: 0.5; height: 25px;"></div>
-
-                    <button class="btn btn-sm btn-outline-light" onclick="window.location.href='/dm/campaignSelect'">
-                        <i class="fas fa-arrow-left me-1"></i> Back to Campaigns
-                    </button>
+                <div class="stat-item">
+                  <i class="fas fa-clock"></i>
+                  <span id="bgLastCapture">--:--</span>
                 </div>
-
+              </div>
+              <i
+                class="fas fa-external-link-alt ms-2"
+                style="opacity: 0.6; font-size: 0.7rem"
+              ></i>
             </div>
+
+            <div
+              class="vr text-light mx-1"
+              style="opacity: 0.5; height: 25px"
+            ></div>
+
+            <button
+              class="btn btn-sm btn-outline-light"
+              onclick="window.location.href = '/dm/campaignSelect'"
+            >
+              <i class="fas fa-arrow-left me-1"></i> Back to Campaigns
+            </button>
+          </div>
         </div>
+      </div>
     </nav>
 
     <div class="dashboard-container">
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="session-code-box">
-                    <h5><i class="fas fa-key me-2"></i>Session Join Code</h5>
-                    <div class="session-code" id="sessionCode">------</div>
-                    <button class="btn btn-copy" onclick="copySessionCode()">
-                        <i class="fas fa-copy me-2"></i>Copy Code
-                    </button>
-                    <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem;">Share this code with players to join</p>
-                </div>
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="session-code-box">
+            <h5><i class="fas fa-key me-2"></i>Session Join Code</h5>
+            <div class="session-code" id="sessionCode">------</div>
+            <button class="btn btn-copy" onclick="copySessionCode()">
+              <i class="fas fa-copy me-2"></i>Copy Code
+            </button>
+            <p class="text-muted mt-2 mb-0" style="font-size: 0.85rem">
+              Share this code with players to join
+            </p>
+          </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-users me-2"></i>Active Players
-                        <span class="badge bg-secondary float-end" id="playerCount">0</span>
-                    </div>
-                    <div class="card-body" id="activePlayers">
-                        <div class="empty-state">
-                            <i class="fas fa-user-slash"></i>
-                            <p>No players connected yet</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-sliders-h me-2"></i>Session Controls
-                    </div>
-                    <div class="card-body">
-                        <button class="btn btn-pause" id="pauseBtn" onclick="togglePause()">
-                            <i class="fas fa-pause me-2"></i>Pause Game
-                        </button>
-                        <button class="btn btn-end-session" onclick="confirmEndSession()">
-                            <i class="fas fa-stop me-2"></i>End Session
-                        </button>
-                    </div>
-                </div>
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-users me-2"></i>Active Players
+              <span class="badge bg-secondary float-end" id="playerCount"
+                >0</span
+              >
             </div>
-
-            <div class="col-lg-5">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-scroll me-2"></i>Game Log
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="game-log" id="gameLog">
-                            <div class="log-entry system">
-                                <span class="log-timestamp">[System]</span> Session started
-                            </div>
-                        </div>
-                        <div class="p-3">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="narrateInput" placeholder="Narrate or add to log..." onkeypress="handleNarrateKeypress(event)">
-                                <button class="btn btn-primary" onclick="addNarration()">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-map me-2"></i>Map Controller
-                    </div>
-                    <div class="card-body">
-                        <label for="mapSelector" class="form-label">Select Map</label>
-                        <select class="form-select" id="mapSelector" onchange="previewMap()">
-                            <option value="">Choose a map...</option>
-                            <option value="/static/img/maps/tavern.webp">Tavern Interior</option>
-                            <option value="/static/img/maps/forest.webp">Forest Path</option>
-                            <option value="/static/img/maps/dungeon.webp">Dungeon Corridor</option>
-                            <option value="/static/img/maps/castle.webp">Castle Hall</option>
-                            <option value="/static/img/maps/cave.webp">Cave System</option>
-                        </select>
-                        <div class="map-preview" id="mapPreview">
-                            <span class="text-muted">No map selected</span>
-                        </div>
-                        <button class="btn btn-push-map" onclick="pushMapToPlayers()">
-                            <i class="fas fa-share me-2"></i>update map
-                        </button>
-                    </div>
-                </div>
+            <div class="card-body" id="activePlayers">
+              <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <p>No players connected yet</p>
+              </div>
             </div>
+          </div>
 
-            <div class="col-lg-3">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-heart-pulse me-2"></i>Player Vitals
-                    </div>
-                    <div class="card-body" id="playerVitals">
-                        <div class="empty-state">
-                            <i class="fas fa-heartbeat"></i>
-                            <p>No player data available</p>
-                        </div>
-                    </div>
-                </div>
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-sliders-h me-2"></i>Session Controls
             </div>
+            <div class="card-body">
+              <button
+                class="btn btn-pause"
+                id="pauseBtn"
+                onclick="togglePause()"
+              >
+                <i class="fas fa-pause me-2"></i>Pause Game
+              </button>
+              <button class="btn btn-end-session" onclick="confirmEndSession()">
+                <i class="fas fa-stop me-2"></i>End Session
+              </button>
+            </div>
+          </div>
         </div>
+
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-scroll me-2"></i>Game Log
+            </div>
+            <div class="card-body p-0">
+              <div class="game-log" id="gameLog">
+                <div class="log-entry system">
+                  <span class="log-timestamp">[System]</span> Session started
+                </div>
+              </div>
+              <div class="p-3">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="narrateInput"
+                    placeholder="Narrate or add to log..."
+                    onkeypress="handleNarrateKeypress(event)"
+                  />
+                  <button class="btn btn-primary" onclick="addNarration()">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-map me-2"></i>Map Controller
+            </div>
+            <div class="card-body">
+              <label for="mapSelector" class="form-label">Select Map</label>
+              <select
+                class="form-select"
+                id="mapSelector"
+                onchange="previewMap()"
+              >
+                <option value="">Choose a map...</option>
+                <option value="/static/img/maps/tavern.webp">
+                  Tavern Interior
+                </option>
+                <option value="/static/img/maps/forest.webp">
+                  Forest Path
+                </option>
+                <option value="/static/img/maps/dungeon.webp">
+                  Dungeon Corridor
+                </option>
+                <option value="/static/img/maps/castle.webp">
+                  Castle Hall
+                </option>
+                <option value="/static/img/maps/cave.webp">Cave System</option>
+              </select>
+              <div class="map-preview" id="mapPreview">
+                <span class="text-muted">No map selected</span>
+              </div>
+              <button class="btn btn-push-map" onclick="pushMapToPlayers()">
+                <i class="fas fa-share me-2"></i>update map
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3">
+          <div class="card">
+            <div class="card-header">
+              <i class="fas fa-heart-pulse me-2"></i>Player Vitals
+            </div>
+            <div class="card-body" id="playerVitals">
+              <div class="empty-state">
+                <i class="fas fa-heartbeat"></i>
+                <p>No player data available</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal fade" id="endSessionModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="background-color: #23272a; color: #ffffff;">
-                <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
-                    <h5 class="modal-title">
-                        <i class="fas fa-exclamation-triangle me-2 text-danger"></i>End Session
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to end this session?</p>
-                    <p class="text-warning">This will disconnect all players and cannot be undone.</p>
-                </div>
-                <div class="modal-footer" style="border-top: 1px solid #4f545c;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" onclick="endSession()">
-                        <i class="fas fa-stop me-2"></i>End Session
-                    </button>
-                </div>
-            </div>
+      <div class="modal-dialog modal-dialog-centered">
+        <div
+          class="modal-content"
+          style="background-color: #23272a; color: #ffffff"
+        >
+          <div class="modal-header" style="border-bottom: 1px solid #4f545c">
+            <h5 class="modal-title">
+              <i class="fas fa-exclamation-triangle me-2 text-danger"></i>End
+              Session
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to end this session?</p>
+            <p class="text-warning">
+              This will disconnect all players and cannot be undone.
+            </p>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid #4f545c">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" onclick="endSession()">
+              <i class="fas fa-stop me-2"></i>End Session
+            </button>
+          </div>
         </div>
+      </div>
     </div>
-    
+
     <!-- ESP32-CAM Manager Modal -->
     <div class="modal fade" id="espcamManagerModal" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
-                
-                <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
-                    <h5 class="modal-title">
-                        <i class="fas fa-robot me-2"></i>ESP32-CAM Manager
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div
+          class="modal-content"
+          style="
+            background-color: #23272a;
+            color: #ffffff;
+            border: 1px solid #4f545c;
+          "
+        >
+          <div class="modal-header" style="border-bottom: 1px solid #4f545c">
+            <h5 class="modal-title">
+              <i class="fas fa-robot me-2"></i>ESP32-CAM Manager
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body p-4">
+            <div class="row">
+              <div class="col-lg-8 mb-4 mb-lg-0">
+                <div
+                  class="espcam-feed-container"
+                  style="
+                    position: relative;
+                    background-color: #2c2f33;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    aspect-ratio: 16/9;
+                  "
+                >
+                  <div
+                    id="espcamStatus"
+                    class="status-badge status-disconnected"
+                    style="
+                      position: absolute;
+                      top: 15px;
+                      right: 15px;
+                      z-index: 10;
+                    "
+                  >
+                    <i class="fas fa-circle me-1"></i>Inactive
+                  </div>
+
+                  <div
+                    class="espcam-placeholder"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                      color: #72767d;
+                    "
+                  >
+                    <i
+                      class="fas fa-robot"
+                      style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5"
+                    ></i>
+                    <p style="font-size: 1.2rem; margin: 0">
+                      ESP32-CAM Inactive
+                    </p>
+                    <small style="opacity: 0.7"
+                      >Click "Connect" to start stream</small
+                    >
+                  </div>
+
+                  <img
+                    id="espcamStream"
+                    alt="ESP32-CAM Stream"
+                    style="
+                      display: none;
+                      width: 100%;
+                      height: 100%;
+                      object-fit: contain;
+                    "
+                  />
+                  <canvas
+                    id="espcamSnapshotCanvas"
+                    style="display: none"
+                  ></canvas>
                 </div>
-                
-                <div class="modal-body p-4">
-                    <div class="row">
-                        
-                        <div class="col-lg-8 mb-4 mb-lg-0">
-                            <div class="espcam-feed-container" style="position: relative; background-color: #2c2f33; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;">
-                                
-                                <div id="espcamStatus" class="status-badge status-disconnected" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
-                                    <i class="fas fa-circle me-1"></i>Inactive
-                                </div>
-                                
-                                <div class="espcam-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #72767d;">
-                                    <i class="fas fa-robot" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
-                                    <p style="font-size: 1.2rem; margin: 0;">ESP32-CAM Inactive</p>
-                                    <small style="opacity: 0.7;">Click "Connect" to start stream</small>
-                                </div>
-                                
-                                <img id="espcamStream" 
-                                alt="ESP32-CAM Stream" 
-                                style="display: none; width: 100%; height: 100%; object-fit: contain;">
-                                <canvas id="espcamSnapshotCanvas" style="display: none;"></canvas>
-                            </div>
-                            
-                            <div class="mt-3" id="espcamSnapshotPreviewContainer" style="display: none;">
-                                <h6 style="color: #b9bbbe; font-size: 0.9rem;">Last Captured Snapshot:</h6>
-                                <img id="espcamSnapshotPreview" 
-                                    style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; background-color: #1a1a1a; border: 1px solid #4f545c;">
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4">
-                            <div class="control-panel" style="background-color: #2c2f33; border-radius: 10px; padding: 20px;">
-                                
-                                <h6 style="color: #ffffff; margin-bottom: 20px; font-weight: 600;">
-                                    <i class="fas fa-sliders-h me-2"></i>Controls
-                                </h6>
-                                
-                                <button id="connectESPCamBtn" class="btn btn-success w-100 mb-3" style="padding: 15px;">
-                                    <i class="fas fa-plug me-2"></i>Connect to Stream
-                                </button>
-                                
-                                <button id="disconnectESPCamBtn" class="btn btn-danger w-100 mb-3" style="padding: 15px; display: none;">
-                                    <i class="fas fa-stop me-2"></i>Disconnect
-                                </button>
-                                
-                                <button id="captureESPSnapshotBtn" class="btn btn-primary w-100 mb-4" style="padding: 15px;" disabled>
-                                    <i class="fas fa-camera me-2"></i>Capture & Upload
-                                </button>
-                                
-                                <div class="mb-4" style="background-color: #23272a; border-radius: 8px; padding: 15px;">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="espcamAutoCapture" disabled>
-                                        <label class="form-check-label" for="espcamAutoCapture" style="color: #b9bbbe;">
-                                            Auto-capture every 3 seconds
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div style="background-color: #23272a; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                                    <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px;">
-                                        <i class="fas fa-info-circle me-2"></i>Status
-                                    </h6>
-                                    <div id="espcamStatusMessage" style="color: #b9bbbe; font-size: 0.85rem;">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <span>Power on your ESP32-CAM and click "Connect".</span>
-                                    </div>
-                                </div>
-                                
-                                <div style="background-color: #23272a; border-radius: 8px; padding: 15px;">
-                                    <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px;">
-                                        <i class="fas fa-chart-line me-2"></i>Statistics
-                                    </h6>
-                                    <div style="font-size: 0.8rem; color: #8e9297;">
-                                        <div style="margin-bottom: 8px;">
-                                            <strong style="color: #b9bbbe;">Camera IP:</strong>
-                                            <span id="espcamIP" style="color: #72767d;">Not connected</span>
-                                        </div>
-                                        <div style="margin-bottom: 8px;">
-                                            <strong style="color: #b9bbbe;">Snapshots:</strong>
-                                            <span id="espcamSnapshotCount" style="color: #72767d;">0</span>
-                                        </div>
-                                        <div>
-                                            <strong style="color: #b9bbbe;">Last Upload:</strong>
-                                            <span id="espcamLastUpload" style="color: #72767d;">Never</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </div>
-                        
+
+                <div
+                  class="mt-3"
+                  id="espcamSnapshotPreviewContainer"
+                  style="display: none"
+                >
+                  <h6 style="color: #b9bbbe; font-size: 0.9rem">
+                    Last Captured Snapshot:
+                  </h6>
+                  <img
+                    id="espcamSnapshotPreview"
+                    style="
+                      width: 100%;
+                      max-height: 200px;
+                      object-fit: contain;
+                      border-radius: 8px;
+                      background-color: #1a1a1a;
+                      border: 1px solid #4f545c;
+                    "
+                  />
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div
+                  class="control-panel"
+                  style="
+                    background-color: #2c2f33;
+                    border-radius: 10px;
+                    padding: 20px;
+                  "
+                >
+                  <h6
+                    style="
+                      color: #ffffff;
+                      margin-bottom: 20px;
+                      font-weight: 600;
+                    "
+                  >
+                    <i class="fas fa-sliders-h me-2"></i>Controls
+                  </h6>
+
+                  <button
+                    id="connectESPCamBtn"
+                    class="btn btn-success w-100 mb-3"
+                    style="padding: 15px"
+                  >
+                    <i class="fas fa-plug me-2"></i>Connect to Stream
+                  </button>
+
+                  <button
+                    id="disconnectESPCamBtn"
+                    class="btn btn-danger w-100 mb-3"
+                    style="padding: 15px; display: none"
+                  >
+                    <i class="fas fa-stop me-2"></i>Disconnect
+                  </button>
+
+                  <button
+                    id="captureESPSnapshotBtn"
+                    class="btn btn-primary w-100 mb-4"
+                    style="padding: 15px"
+                    disabled
+                  >
+                    <i class="fas fa-camera me-2"></i>Capture & Upload
+                  </button>
+
+                  <div
+                    class="mb-4"
+                    style="
+                      background-color: #23272a;
+                      border-radius: 8px;
+                      padding: 15px;
+                    "
+                  >
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="espcamAutoCapture"
+                        disabled
+                      />
+                      <label
+                        class="form-check-label"
+                        for="espcamAutoCapture"
+                        style="color: #b9bbbe"
+                      >
+                        Auto-capture every 3 seconds
+                      </label>
                     </div>
-                </div>
-                
-                <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
-                    <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> Stream runs in background when modal is closed.
+                  </div>
+
+                  <div
+                    style="
+                      background-color: #23272a;
+                      border-radius: 8px;
+                      padding: 15px;
+                      margin-bottom: 20px;
+                    "
+                  >
+                    <h6
+                      style="
+                        color: #ffffff;
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                      "
+                    >
+                      <i class="fas fa-info-circle me-2"></i>Status
+                    </h6>
+                    <div
+                      id="espcamStatusMessage"
+                      style="color: #b9bbbe; font-size: 0.85rem"
+                    >
+                      <i class="fas fa-info-circle me-2"></i>
+                      <span>Power on your ESP32-CAM and click "Connect".</span>
                     </div>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-minimize me-2"></i>Minimize
-                    </button>
+                  </div>
+
+                  <div
+                    style="
+                      background-color: #23272a;
+                      border-radius: 8px;
+                      padding: 15px;
+                    "
+                  >
+                    <h6
+                      style="
+                        color: #ffffff;
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                      "
+                    >
+                      <i class="fas fa-chart-line me-2"></i>Statistics
+                    </h6>
+                    <div style="font-size: 0.8rem; color: #8e9297">
+                      <div style="margin-bottom: 8px">
+                        <strong style="color: #b9bbbe">Camera IP:</strong>
+                        <span id="espcamIP" style="color: #72767d"
+                          >Not connected</span
+                        >
+                      </div>
+                      <div style="margin-bottom: 8px">
+                        <strong style="color: #b9bbbe">Snapshots:</strong>
+                        <span id="espcamSnapshotCount" style="color: #72767d"
+                          >0</span
+                        >
+                      </div>
+                      <div>
+                        <strong style="color: #b9bbbe">Last Upload:</strong>
+                        <span id="espcamLastUpload" style="color: #72767d"
+                          >Never</span
+                        >
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
+              </div>
             </div>
+          </div>
+
+          <div
+            class="modal-footer"
+            style="border-top: 1px solid #4f545c; background-color: #2c2f33"
+          >
+            <div
+              style="
+                flex: 1;
+                text-align: left;
+                color: #8e9297;
+                font-size: 0.85rem;
+              "
+            >
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Note:</strong> Stream runs in background when modal is
+              closed.
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              <i class="fas fa-minimize me-2"></i>Minimize
+            </button>
+          </div>
         </div>
+      </div>
     </div>
+
     <!-- WEBCAM Manager Modal -->
-    <div class="modal fade" id="webcamManagerModal" tabindex="-1" aria-labelledby="webcamManagerModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
-                
-                <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
-                    <h5 class="modal-title" id="webcamManagerModalLabel">
-                        <i class="fas fa-camera me-2"></i>Local Webcam Manager
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div
+      class="modal fade"
+      id="webcamManagerModal"
+      tabindex="-1"
+      aria-labelledby="webcamManagerModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div
+          class="modal-content"
+          style="
+            background-color: #23272a;
+            color: #ffffff;
+            border: 1px solid #4f545c;
+          "
+        >
+          <div class="modal-header" style="border-bottom: 1px solid #4f545c">
+            <h5 class="modal-title" id="webcamManagerModalLabel">
+              <i class="fas fa-camera me-2"></i>Local Webcam Manager
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body p-4">
+            <div class="row">
+              <div class="col-lg-8 mb-4 mb-lg-0">
+                <div
+                  class="webcam-feed-container"
+                  style="
+                    position: relative;
+                    background-color: #2c2f33;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    aspect-ratio: 16/9;
+                  "
+                >
+                  <div
+                    id="webcamStatus"
+                    class="status-badge status-disconnected"
+                    style="
+                      position: absolute;
+                      top: 15px;
+                      right: 15px;
+                      z-index: 10;
+                    "
+                  >
+                    <i class="fas fa-circle me-1"></i>Inactive
+                  </div>
+
+                  <div
+                    class="webcam-placeholder"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                      color: #72767d;
+                    "
+                  >
+                    <i
+                      class="fas fa-camera-retro"
+                      style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5"
+                    ></i>
+                    <p style="font-size: 1.2rem; margin: 0">Webcam Inactive</p>
+                    <small style="opacity: 0.7"
+                      >Click "Start Webcam" to begin</small
+                    >
+                  </div>
+
+                  <video
+                    id="webcamVideo"
+                    autoplay
+                    playsinline
+                    style="
+                      display: none;
+                      width: 100%;
+                      height: 100%;
+                      object-fit: contain;
+                      transform: scaleX(-1);
+                    "
+                  ></video>
+
+                  <canvas id="snapshotCanvas" style="display: none"></canvas>
                 </div>
-                
-                <div class="modal-body p-4">
-                    <div class="row">
-                        
-                        <div class="col-lg-8 mb-4 mb-lg-0">
-                            <div class="webcam-feed-container" style="position: relative; background-color: #2c2f33; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9;">
-                                
-                                <div id="webcamStatus" class="status-badge status-disconnected" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
-                                    <i class="fas fa-circle me-1"></i>Inactive
-                                </div>
-                                
-                                <div class="webcam-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #72767d;">
-                                    <i class="fas fa-camera-retro" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
-                                    <p style="font-size: 1.2rem; margin: 0;">Webcam Inactive</p>
-                                    <small style="opacity: 0.7;">Click "Start Webcam" to begin</small>
-                                </div>
-                                
-                                <video id="webcamVideo" 
-                                    autoplay 
-                                    playsinline 
-                                    style="display: none; width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1);">
-                                </video>
-                                
-                                <canvas id="snapshotCanvas" style="display: none;"></canvas>
-                            </div>
-                            
-                            <div class="mt-3" id="snapshotPreviewContainer" style="display: none;">
-                                <h6 style="color: #b9bbbe; font-size: 0.9rem;">Last Captured Snapshot:</h6>
-                                <img id="snapshotPreview" 
-                                    style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; background-color: #1a1a1a; border: 1px solid #4f545c;">
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4">
-                            <div class="control-panel" style="background-color: #2c2f33; border-radius: 10px; padding: 20px; height: 100%; display: flex; flex-direction: column;">
-                                
-                                <h6 style="color: #ffffff; margin-bottom: 20px; font-weight: 600;">
-                                    <i class="fas fa-sliders-h me-2"></i>Controls
-                                </h6>
-                                
-                                <button id="startWebcamBtn" 
-                                        class="btn btn-success w-100 mb-3" 
-                                        style="padding: 15px; font-size: 1rem; font-weight: 600;">
-                                    <i class="fas fa-play me-2"></i>Start Webcam
-                                </button>
-                                
-                                <button id="stopWebcamBtn" 
-                                        class="btn btn-danger w-100 mb-3" 
-                                        style="padding: 15px; font-size: 1rem; font-weight: 600; display: none;">
-                                    <i class="fas fa-stop me-2"></i>Stop Webcam
-                                </button>
-                                
-                                <button id="captureSnapshotBtn" 
-                                        class="btn btn-primary w-100 mb-4" 
-                                        style="padding: 15px; font-size: 1rem; font-weight: 600; background-color: #5865f2; border: none;" 
-                                        disabled>
-                                    <i class="fas fa-camera me-2"></i>Capture & Upload
-                                </button>
-                                
-                                <div class="mb-4" style="background-color: #23272a; border-radius: 8px; padding: 15px;">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="autoCapture" disabled>
-                                        <label class="form-check-label" for="autoCapture" style="color: #b9bbbe;">
-                                            Auto-capture every 3 seconds
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div style="flex: 1; background-color: #23272a; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                                    <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
-                                        <i class="fas fa-info-circle me-2"></i>Status
-                                    </h6>
-                                    <div id="webcamStatusMessage" style="color: #b9bbbe; font-size: 0.85rem; line-height: 1.5;">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <span>Click "Start Webcam" to activate your camera.</span>
-                                    </div>
-                                </div>
-                                
-                                <div style="background-color: #23272a; border-radius: 8px; padding: 15px;">
-                                    <h6 style="color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; font-weight: 600;">
-                                        <i class="fas fa-chart-line me-2"></i>Statistics
-                                    </h6>
-                                    <div style="font-size: 0.8rem; color: #8e9297;">
-                                        <div style="margin-bottom: 8px;">
-                                            <strong style="color: #b9bbbe;">Snapshots Captured:</strong>
-                                            <span id="snapshotCount" style="color: #72767d;">0</span>
-                                        </div>
-                                        <div style="margin-bottom: 8px;">
-                                            <strong style="color: #b9bbbe;">Last Upload:</strong>
-                                            <span id="lastUpload" style="color: #72767d;">Never</span>
-                                        </div>
-                                        <div>
-                                            <strong style="color: #b9bbbe;">Resolution:</strong>
-                                            <span id="videoResolution" style="color: #72767d;">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </div>
-                        
+
+                <div
+                  class="mt-3"
+                  id="snapshotPreviewContainer"
+                  style="display: none"
+                >
+                  <h6 style="color: #b9bbbe; font-size: 0.9rem">
+                    Last Captured Snapshot:
+                  </h6>
+                  <img
+                    id="snapshotPreview"
+                    style="
+                      width: 100%;
+                      max-height: 200px;
+                      object-fit: contain;
+                      border-radius: 8px;
+                      background-color: #1a1a1a;
+                      border: 1px solid #4f545c;
+                    "
+                  />
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div
+                  class="control-panel"
+                  style="
+                    background-color: #2c2f33;
+                    border-radius: 10px;
+                    padding: 20px;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                  "
+                >
+                  <h6
+                    style="
+                      color: #ffffff;
+                      margin-bottom: 20px;
+                      font-weight: 600;
+                    "
+                  >
+                    <i class="fas fa-sliders-h me-2"></i>Controls
+                  </h6>
+
+                  <button
+                    id="startWebcamBtn"
+                    class="btn btn-success w-100 mb-3"
+                    style="padding: 15px; font-size: 1rem; font-weight: 600"
+                  >
+                    <i class="fas fa-play me-2"></i>Start Webcam
+                  </button>
+
+                  <button
+                    id="stopWebcamBtn"
+                    class="btn btn-danger w-100 mb-3"
+                    style="
+                      padding: 15px;
+                      font-size: 1rem;
+                      font-weight: 600;
+                      display: none;
+                    "
+                  >
+                    <i class="fas fa-stop me-2"></i>Stop Webcam
+                  </button>
+
+                  <button
+                    id="captureSnapshotBtn"
+                    class="btn btn-primary w-100 mb-4"
+                    style="
+                      padding: 15px;
+                      font-size: 1rem;
+                      font-weight: 600;
+                      background-color: #5865f2;
+                      border: none;
+                    "
+                    disabled
+                  >
+                    <i class="fas fa-camera me-2"></i>Capture & Upload
+                  </button>
+
+                  <div
+                    class="mb-4"
+                    style="
+                      background-color: #23272a;
+                      border-radius: 8px;
+                      padding: 15px;
+                    "
+                  >
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="autoCapture"
+                        disabled
+                      />
+                      <label
+                        class="form-check-label"
+                        for="autoCapture"
+                        style="color: #b9bbbe"
+                      >
+                        Auto-capture every 3 seconds
+                      </label>
                     </div>
-                </div>
-                
-                <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
-                    <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> Closing this window keeps the webcam running in the background.
+                  </div>
+
+                  <div
+                    style="
+                      flex: 1;
+                      background-color: #23272a;
+                      border-radius: 8px;
+                      padding: 15px;
+                      margin-bottom: 20px;
+                    "
+                  >
+                    <h6
+                      style="
+                        color: #ffffff;
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                        font-weight: 600;
+                      "
+                    >
+                      <i class="fas fa-info-circle me-2"></i>Status
+                    </h6>
+                    <div
+                      id="webcamStatusMessage"
+                      style="
+                        color: #b9bbbe;
+                        font-size: 0.85rem;
+                        line-height: 1.5;
+                      "
+                    >
+                      <i class="fas fa-info-circle me-2"></i>
+                      <span>Click "Start Webcam" to activate your camera.</span>
                     </div>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-minimize me-2"></i>Minimize
-                    </button>
+                  </div>
+
+                  <div
+                    style="
+                      background-color: #23272a;
+                      border-radius: 8px;
+                      padding: 15px;
+                    "
+                  >
+                    <h6
+                      style="
+                        color: #ffffff;
+                        font-size: 0.9rem;
+                        margin-bottom: 10px;
+                        font-weight: 600;
+                      "
+                    >
+                      <i class="fas fa-chart-line me-2"></i>Statistics
+                    </h6>
+                    <div style="font-size: 0.8rem; color: #8e9297">
+                      <div style="margin-bottom: 8px">
+                        <strong style="color: #b9bbbe"
+                          >Snapshots Captured:</strong
+                        >
+                        <span id="snapshotCount" style="color: #72767d">0</span>
+                      </div>
+                      <div style="margin-bottom: 8px">
+                        <strong style="color: #b9bbbe">Last Upload:</strong>
+                        <span id="lastUpload" style="color: #72767d"
+                          >Never</span
+                        >
+                      </div>
+                      <div>
+                        <strong style="color: #b9bbbe">Resolution:</strong>
+                        <span id="videoResolution" style="color: #72767d"
+                          >-</span
+                        >
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
+              </div>
             </div>
+          </div>
+
+          <div
+            class="modal-footer"
+            style="border-top: 1px solid #4f545c; background-color: #2c2f33"
+          >
+            <div
+              style="
+                flex: 1;
+                text-align: left;
+                color: #8e9297;
+                font-size: 0.85rem;
+              "
+            >
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Note:</strong> Closing this window keeps the webcam
+              running in the background.
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              <i class="fas fa-minimize me-2"></i>Minimize
+            </button>
+          </div>
         </div>
+      </div>
     </div>
+
     <!-- Sound Board Modal -->
-    <div class="modal fade" id="soundBoardModal" tabindex="-1" aria-labelledby="soundBoardModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="background-color: #23272a; color: #ffffff; border: 1px solid #4f545c;">
-                
-                <!-- Modal Header -->
-                <div class="modal-header" style="border-bottom: 1px solid #4f545c;">
-                    <h5 class="modal-title" id="soundBoardModalLabel">
-                        <i class="fas fa-volume-up me-2"></i>Sound Board
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                
-                <!-- Modal Body -->
-                <div class="modal-body p-4">
-                    
-                    <!-- Status Display -->
-                    <div id="soundboardStatus" class="soundboard-status">
-                        <span id="soundboardStatusText">
-                            <i class="fas fa-music"></i>
-                            <span>Ready to play sounds</span>
-                        </span>
-                    </div>
-                    
-                    <!-- Sound Buttons Grid -->
-                    <div class="sound-grid">
-                        
-                        <!-- Beep Button -->
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-bell"></i>
-                            Beep
-                        </button>
-                        
-                        <!-- Additional Beep Variations -->
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-volume-down"></i>
-                            Short Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-volume-up"></i>
-                            Long Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-exclamation"></i>
-                            Alert Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-check"></i>
-                            Success Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-times"></i>
-                            Error Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-question"></i>
-                            Question Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-star"></i>
-                            Special Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-heart"></i>
-                            Happy Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-skull"></i>
-                            Danger Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-dice-d20"></i>
-                            Dice Beep
-                        </button>
-                        
-                        <button class="sound-button" onclick="triggerSound('Beep', this)">
-                            <i class="fas fa-shield-alt"></i>
-                            Shield Beep
-                        </button>
-                        
-                    </div>
-                    
-                </div>
-                
-                <!-- Modal Footer -->
-                <div class="modal-footer" style="border-top: 1px solid #4f545c; background-color: #2c2f33;">
-                    <div style="flex: 1; text-align: left; color: #8e9297; font-size: 0.85rem;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Tip:</strong> Sounds play through ESP32-CAM speaker
-                    </div>
-                    <button type="button" class="btn-clear-all" id="clearSoundBtn">
-                        <i class="fas fa-stop me-2"></i>Clear Effect
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-                
+    <div
+      class="modal fade"
+      id="soundBoardModal"
+      tabindex="-1"
+      aria-labelledby="soundBoardModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div
+          class="modal-content"
+          style="
+            background-color: #23272a;
+            color: #ffffff;
+            border: 1px solid #4f545c;
+          "
+        >
+          <div class="modal-header" style="border-bottom: 1px solid #4f545c">
+            <h5 class="modal-title" id="soundBoardModalLabel">
+              <i class="fas fa-volume-up me-2"></i>Sound Board
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body p-4">
+            <div id="soundboardStatus" class="soundboard-status">
+              <span id="soundboardStatusText">
+                <i class="fas fa-music"></i>
+                <span>Ready to play sounds</span>
+              </span>
             </div>
+
+            <div class="sound-grid">
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-bell"></i> Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-volume-down"></i> Short Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-volume-up"></i> Long Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-exclamation"></i> Alert Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-check"></i> Success Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-times"></i> Error Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-question"></i> Question Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-star"></i> Special Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-heart"></i> Happy Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-skull"></i> Danger Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-dice-d20"></i> Dice Beep
+              </button>
+              <button class="sound-button" onclick="triggerSound('Beep', this)">
+                <i class="fas fa-shield-alt"></i> Shield Beep
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="modal-footer"
+            style="border-top: 1px solid #4f545c; background-color: #2c2f33"
+          >
+            <div
+              style="
+                flex: 1;
+                text-align: left;
+                color: #8e9297;
+                font-size: 0.85rem;
+              "
+            >
+              <i class="fas fa-info-circle me-2"></i>
+              <strong>Tip:</strong> Sounds play through ESP32-CAM speaker
+            </div>
+            <button type="button" class="btn-clear-all" id="clearSoundBtn">
+              <i class="fas fa-stop me-2"></i>Clear Effect
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
         </div>
+      </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/dmDashboard.js"></script>
     <script src="/static/js/dm_camera.js"></script>
@@ -553,8 +962,5 @@
     <script src="/static/js/dm_webcam_background.js"></script>
     <script src="/static/js/dm_espcam.js"></script>
     <script src="/static/js/dm_soundboard.js"></script>
-
-
-
-</body>
+  </body>
 </html>

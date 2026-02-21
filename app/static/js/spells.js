@@ -19,46 +19,25 @@ let spellData = {
 
 let currentSpell = null;
 let isLoading = false;
+
 async function calculateSpellStats() {
     const characterId = localStorage.getItem('selectedCharacterId');
-    
-    if (!characterId || !spellData.spellcastingAbility) {
-        return;
-    }
-    
+    if (!characterId || !spellData.spellcastingAbility) return;
     try {
-        // Fetch character data to get ability scores and proficiency bonus
         const response = await fetch(`/api/game/character/${characterId}`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
             const character = result.character;
-            
-            // Get the spellcasting ability score
             const abilityScore = character.abilities[spellData.spellcastingAbility.toLowerCase()]?.score || 10;
-            
-            // Calculate ability modifier
             const abilityModifier = Math.floor((abilityScore - 10) / 2);
-            
-            // Get proficiency bonus (default to +2 if not set)
             const proficiencyBonus = character.proficiencyBonus || 2;
-            
-            // Calculate Spell Save DC = 8 + proficiency + ability modifier
             spellData.spellDC = 8 + proficiencyBonus + abilityModifier;
-            
-            // Calculate Spell Attack Bonus = proficiency + ability modifier
             spellData.spellAttack = proficiencyBonus + abilityModifier;
-            
-            // Save and render
             await saveSpellStats();
             renderUI();
-            
             console.log(`Spell stats calculated: DC=${spellData.spellDC}, Attack=${spellData.spellAttack}`);
         }
     } catch (error) {
@@ -66,65 +45,38 @@ async function calculateSpellStats() {
     }
 }
 
-/**
- * Initialize the page
- */
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
-    
-    // Set up ability select change handler
     const abilitySelect = document.getElementById('abilitySelect');
     if (abilitySelect) {
         abilitySelect.addEventListener('change', async function() {
             spellData.spellcastingAbility = this.value;
-            
-            // Auto-calculate when ability is selected
             await calculateSpellStats();
         });
     }
 });
 
-/**
- * Load spell data from server
- */
 async function loadData() {
     const characterId = localStorage.getItem('selectedCharacterId');
-    
-    if (!characterId) {
-        showError('No character selected');
-        return;
-    }
-    
+    if (!characterId) { showError('No character selected'); return; }
     showLoading(true);
-    
     try {
         const response = await fetch(`/api/game/loadSpells/${characterId}`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
             if (result.spells) {
                 spellData = result.spells;
-                
-                // Ensure all spell levels exist
                 for (let i = 0; i <= 9; i++) {
                     if (!spellData.spellSlots[i]) {
                         spellData.spellSlots[i] = { max: 0, remaining: 0, spells: [] };
                     }
                 }
             }
-            
             renderUI();
-            
-            // Auto-calculate spell stats if ability is selected
-            if (spellData.spellcastingAbility) {
-                await calculateSpellStats();
-            }
+            if (spellData.spellcastingAbility) await calculateSpellStats();
         } else {
             throw new Error(result.message || 'Failed to load spells');
         }
@@ -136,35 +88,20 @@ async function loadData() {
         showLoading(false);
     }
 }
-/**
- * Save complete spell data to server
- */
+
 async function saveData() {
     if (isLoading) return;
-    
     const characterId = localStorage.getItem('selectedCharacterId');
-    
-    if (!characterId) {
-        console.error('No character selected');
-        return false;
-    }
-    
+    if (!characterId) { console.error('No character selected'); return false; }
     try {
         const response = await fetch(`/api/game/saveSpells/${characterId}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(spellData)
         });
-        
         const result = await response.json();
-        
-        if (response.ok && result.status === 'success') {
-            return true;
-        } else {
-            throw new Error(result.message || 'Failed to save spells');
-        }
+        if (response.ok && result.status === 'success') return true;
+        throw new Error(result.message || 'Failed to save spells');
     } catch (error) {
         console.error('Error saving spells:', error);
         showError(`Failed to save: ${error.message}`);
@@ -172,29 +109,20 @@ async function saveData() {
     }
 }
 
-/**
- * Save spell stats (DC, Attack, Ability)
- */
 async function saveSpellStats() {
     const characterId = localStorage.getItem('selectedCharacterId');
-    
     if (!characterId) return;
-    
     try {
         const response = await fetch(`/api/game/updateSpellStats/${characterId}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 spellDC: spellData.spellDC,
                 spellAttack: spellData.spellAttack,
                 spellcastingAbility: spellData.spellcastingAbility
             })
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
             console.log('Spell stats saved');
         } else {
@@ -206,37 +134,25 @@ async function saveSpellStats() {
     }
 }
 
-/**
- * Render the entire UI
- */
 function renderUI() {
     document.getElementById('spellDC').textContent = spellData.spellDC;
-    document.getElementById('spellAttack').textContent = spellData.spellAttack >= 0 ? 
+    document.getElementById('spellAttack').textContent = spellData.spellAttack >= 0 ?
         `+${spellData.spellAttack}` : `${spellData.spellAttack}`;
-    
-    // Set ability dropdown
     const abilitySelect = document.getElementById('abilitySelect');
     if (abilitySelect && spellData.spellcastingAbility) {
         abilitySelect.value = spellData.spellcastingAbility;
     }
-    
     renderSpellLevels();
 }
 
-/**
- * Render spell levels
- */
 function renderSpellLevels() {
     const container = document.getElementById('spellLevelsContainer');
     container.innerHTML = '';
-
     for (let level = 0; level <= 9; level++) {
         const levelData = spellData.spellSlots[level];
         const levelCard = document.createElement('div');
         levelCard.className = 'spell-level-card';
-        
         const levelName = level === 0 ? 'Cantrips' : `Level ${level}`;
-        
         levelCard.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="mb-0">${levelName}</h4>
@@ -244,12 +160,11 @@ function renderSpellLevels() {
                     <i class="bi bi-plus-circle"></i> Add Spell
                 </button>
             </div>
-            
             ${level > 0 ? `
             <div class="row mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Maximum Slots</label>
-                    <input type="number" class="form-control" value="${levelData.max}" 
+                    <input type="number" class="form-control" value="${levelData.max}"
                         onchange="window.updateMaxSlots(${level}, this.value)" min="0">
                 </div>
                 <div class="col-md-8">
@@ -260,19 +175,14 @@ function renderSpellLevels() {
                 </div>
             </div>
             ` : ''}
-            
             <div id="spellList${level}">
                 ${renderSpellList(level, levelData.spells)}
             </div>
         `;
-        
         container.appendChild(levelCard);
     }
 }
 
-/**
- * Generate slot circles
- */
 function generateSlotCircles(level, max, remaining) {
     let html = '';
     for (let i = 0; i < max; i++) {
@@ -282,14 +192,8 @@ function generateSlotCircles(level, max, remaining) {
     return html;
 }
 
-/**
- * Render spell list
- */
 function renderSpellList(level, spells) {
-    if (!spells || spells.length === 0) {
-        return '<p class="text-muted">No spells at this level</p>';
-    }
-
+    if (!spells || spells.length === 0) return '<p class="text-muted">No spells at this level</p>';
     return spells.map((spell, index) => `
         <div class="spell-item" onclick="window.viewSpell(${level}, ${index})">
             <div class="d-flex justify-content-between align-items-start">
@@ -306,9 +210,6 @@ function renderSpellList(level, spells) {
     `).join('');
 }
 
-/**
- * Open spell modal to add new spell
- */
 window.openSpellModal = function(level) {
     document.getElementById('spellLevel').value = level;
     document.getElementById('spellId').value = '';
@@ -317,9 +218,6 @@ window.openSpellModal = function(level) {
     new bootstrap.Modal(document.getElementById('spellModal')).show();
 };
 
-/**
- * Save spell
- */
 window.saveSpell = async function() {
     const level = parseInt(document.getElementById('spellLevel').value);
     const spell = {
@@ -330,38 +228,22 @@ window.saveSpell = async function() {
         description: document.getElementById('spellDescription').value,
         higherLevel: document.getElementById('spellHigherLevel').value || ''
     };
-
-    // Validate
     if (!spell.name || !spell.school || !spell.casting || !spell.range || !spell.description) {
         showError('Please fill in all required fields');
         return;
     }
-
     const characterId = localStorage.getItem('selectedCharacterId');
-    
-    if (!characterId) {
-        showError('No character selected');
-        return;
-    }
-    
+    if (!characterId) { showError('No character selected'); return; }
     try {
         const response = await fetch(`/api/game/addSpell/${characterId}/${level}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(spell)
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
-            // Add to local data
-            if (!spellData.spellSlots[level].spells) {
-                spellData.spellSlots[level].spells = [];
-            }
+            if (!spellData.spellSlots[level].spells) spellData.spellSlots[level].spells = [];
             spellData.spellSlots[level].spells.push(spell);
-            
             renderUI();
             bootstrap.Modal.getInstance(document.getElementById('spellModal')).hide();
             showSuccess('Spell added successfully');
@@ -374,19 +256,14 @@ window.saveSpell = async function() {
     }
 };
 
-/**
- * View spell details
- */
 window.viewSpell = function(level, index) {
     const spell = spellData.spellSlots[level].spells[index];
     currentSpell = { name: spell.name, range: spell.range, level: level, index: index };
-    
     document.getElementById('viewSpellName').textContent = spell.name;
     document.getElementById('viewSpellSchool').textContent = spell.school;
     document.getElementById('viewSpellCasting').textContent = spell.casting;
     document.getElementById('viewSpellRange').textContent = spell.range;
     document.getElementById('viewSpellDescription').textContent = spell.description;
-    
     const higherLevelContainer = document.getElementById('viewSpellHigherLevelContainer');
     if (spell.higherLevel && spell.higherLevel.trim() !== '') {
         document.getElementById('viewSpellHigherLevel').textContent = spell.higherLevel;
@@ -394,58 +271,127 @@ window.viewSpell = function(level, index) {
     } else {
         higherLevelContainer.style.display = 'none';
     }
-    
     const school = document.getElementById('viewSpellSchool');
-    [
-        "school-Abjuration",
-        "school-Conjuration",
-        "school-Divination",
-        "school-Enchantment",
-        "school-Evocation",
-        "school-Illusion",
-        "school-Necromancy",
-        "school-Transmutation"
-    ].forEach(cls => school.classList.remove(cls));
+    ["school-Abjuration","school-Conjuration","school-Divination","school-Enchantment",
+     "school-Evocation","school-Illusion","school-Necromancy","school-Transmutation"]
+        .forEach(cls => school.classList.remove(cls));
     school.classList.add(`school-${spell.school}`);
-
     new bootstrap.Modal(document.getElementById('viewSpellModal')).show();
 };
 
-/**
- * Use spell (you can customize this)
- */
-window.useSpell = function() {
-    if (currentSpell) {
-        alert(`Using spell: ${currentSpell.name}`);
-        // You can add logic here to consume spell slots if needed
+// ============================================================
+// Grid area-effect helpers
+// ============================================================
+
+const GRID_ROWS = 8;
+const GRID_COLS = 12;
+
+function getSpellAreaCells(centerRow, centerCol) {
+    const cells = [];
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            const r = centerRow + dr;
+            const c = centerCol + dc;
+            if (r >= 0 && r < GRID_ROWS && c >= 0 && c < GRID_COLS) {
+                cells.push({ row: r, col: c });
+            }
+        }
     }
+    return cells;
+}
+
+async function highlightGridCells(cells, spellName) {
+    const sessionId = localStorage.getItem('activeSessionId');
+    if (!sessionId) {
+        showError('No active game session found. Join a session before casting.');
+        return;
+    }
+    const centre = cells[Math.floor(cells.length / 2)];
+    try {
+        const response = await fetch(`/api/grid/session/${sessionId}/effect`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                row:   centre.row,
+                col:   centre.col,
+                color: '#9B59B6',
+                label: spellName
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') {
+            console.warn('Grid effect failed:', result.message);
+            showError(`Grid effect failed: ${result.message}`);
+        } else {
+            console.log(`✨ "${spellName}" effect placed at row=${centre.row}, col=${centre.col}`);
+        }
+    } catch (err) {
+        console.error('Grid effect request error:', err);
+        showError('Network error sending spell effect to grid.');
+    }
+}
+
+window.useSpell = async function() {
+    if (!currentSpell) return;
+
+    const spellName = currentSpell.name;
+    let figureRow = null;
+    let figureCol = null;
+
+    try {
+        const statusRes = await fetch('/api/webcam/status');
+        if (!statusRes.ok) { showError('Could not reach the webcam service.'); return; }
+
+        const status = await statusRes.json();
+
+        if (!status.active) {
+            showError('Webcam is not active. Start the webcam feed before casting.');
+            return;
+        }
+        if (!status.has_snapshot) {
+            showError('No snapshot taken yet. Capture a frame from the webcam first.');
+            return;
+        }
+
+        const vision = status.last_vision_result;
+        if (!vision) {
+            showError("Snapshot exists but vision hasn't run. Try capturing a new frame.");
+            return;
+        }
+        if (vision.status !== 'success') {
+            showError(`Vision error: ${vision.message}`);
+            return;
+        }
+
+        figureRow = vision.row;
+        figureCol = vision.col;
+
+    } catch (err) {
+        console.error('Failed to fetch webcam status:', err);
+        showError('Network error reaching webcam service.');
+        return;
+    }
+
+    const areaCells = getSpellAreaCells(figureRow, figureCol);
+    console.log(
+        `🔮 "${spellName}" fired at row=${figureRow}, col=${figureCol} →`,
+        areaCells.map(c => `(${c.row},${c.col})`).join(' ')
+    );
+
+    await highlightGridCells(areaCells, spellName);
+    showSuccess(`${spellName} cast! 3×3 area at row ${figureRow}, col ${figureCol}.`);
 };
 
-/**
- * Delete spell
- */
 window.deleteSpell = async function(level, index) {
-    if (!confirm('Are you sure you want to delete this spell?')) {
-        return;
-    }
-    
+    if (!confirm('Are you sure you want to delete this spell?')) return;
     const characterId = localStorage.getItem('selectedCharacterId');
-    
-    if (!characterId) {
-        showError('No character selected');
-        return;
-    }
-    
+    if (!characterId) { showError('No character selected'); return; }
     try {
         const response = await fetch(`/api/game/deleteSpell/${characterId}/${level}/${index}`, {
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
             spellData.spellSlots[level].spells.splice(index, 1);
             renderUI();
@@ -459,31 +405,18 @@ window.deleteSpell = async function(level, index) {
     }
 };
 
-/**
- * Update max slots
- */
 window.updateMaxSlots = async function(level, value) {
     const max = parseInt(value) || 0;
     const remaining = Math.min(spellData.spellSlots[level].remaining, max);
-    
     const characterId = localStorage.getItem('selectedCharacterId');
-    
     if (!characterId) return;
-    
     try {
         const response = await fetch(`/api/game/updateSpellSlots/${characterId}/${level}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                max: max,
-                remaining: remaining
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ max, remaining })
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
             spellData.spellSlots[level].max = max;
             spellData.spellSlots[level].remaining = remaining;
@@ -497,37 +430,18 @@ window.updateMaxSlots = async function(level, value) {
     }
 };
 
-/**
- * Toggle spell slot
- */
 window.toggleSlot = async function(level, index) {
     const levelData = spellData.spellSlots[level];
-    let newRemaining;
-    
-    if (index < levelData.remaining) {
-        newRemaining = index;
-    } else {
-        newRemaining = index + 1;
-    }
-    
+    const newRemaining = index < levelData.remaining ? index : index + 1;
     const characterId = localStorage.getItem('selectedCharacterId');
-    
     if (!characterId) return;
-    
     try {
         const response = await fetch(`/api/game/updateSpellSlots/${characterId}/${level}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                max: levelData.max,
-                remaining: newRemaining
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ max: levelData.max, remaining: newRemaining })
         });
-        
         const result = await response.json();
-        
         if (response.ok && result.status === 'success') {
             spellData.spellSlots[level].remaining = newRemaining;
             renderUI();
@@ -540,106 +454,61 @@ window.toggleSlot = async function(level, index) {
     }
 };
 
-/**
- * Update spell DC
- */
 document.getElementById('spellDCInput').addEventListener('change', (e) => {
     spellData.spellDC = parseInt(e.target.value) || 10;
     saveSpellStats();
     renderUI();
 });
 
-/**
- * Update spell attack
- */
 document.getElementById('spellAttackInput').addEventListener('change', (e) => {
     spellData.spellAttack = parseInt(e.target.value) || 0;
     saveSpellStats();
     renderUI();
 });
 
-/**
- * Show loading state
- */
 function showLoading(show) {
     if (show) {
         if (!document.getElementById('spellsLoadingOverlay')) {
             const overlay = document.createElement('div');
             overlay.id = 'spellsLoadingOverlay';
             overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(44, 47, 51, 0.9);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 9999;
-            `;
+                position:fixed;top:0;left:0;width:100%;height:100%;
+                background-color:rgba(44,47,51,0.9);display:flex;
+                justify-content:center;align-items:center;z-index:9999;`;
             overlay.innerHTML = `
-                <div style="text-align: center;">
-                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <div style="text-align:center;">
+                    <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p style="color: #ffffff; margin-top: 20px;">Loading spells...</p>
-                </div>
-            `;
+                    <p style="color:#ffffff;margin-top:20px;">Loading spells...</p>
+                </div>`;
             document.body.appendChild(overlay);
         }
     } else {
-        const overlay = document.getElementById('spellsLoadingOverlay');
-        if (overlay) {
-            overlay.remove();
-        }
+        document.getElementById('spellsLoadingOverlay')?.remove();
     }
 }
 
-/**
- * Show error message
- */
 function showError(message) {
     const container = document.querySelector('.container.mt-4');
-    
     const errorDiv = document.createElement('div');
     errorDiv.className = 'alert alert-danger alert-dismissible fade show';
     errorDiv.role = 'alert';
     errorDiv.innerHTML = `
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    
-    if (container) {
-        container.insertBefore(errorDiv, container.firstChild);
-    }
-    
-    setTimeout(() => {
-        errorDiv.remove();
-    }, 5000);
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+    if (container) container.insertBefore(errorDiv, container.firstChild);
+    setTimeout(() => errorDiv.remove(), 5000);
 }
 
-/**
- * Show success message
- */
 function showSuccess(message) {
     const container = document.querySelector('.container.mt-4');
-    
     const successDiv = document.createElement('div');
     successDiv.className = 'alert alert-success alert-dismissible fade show';
     successDiv.role = 'alert';
     successDiv.innerHTML = `
-        <i class="bi bi-check-circle-fill me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    
-    if (container) {
-        container.insertBefore(successDiv, container.firstChild);
-    }
-    
-    setTimeout(() => {
-        successDiv.remove();
-    }, 3000);
+        <i class="bi bi-check-circle-fill me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+    if (container) container.insertBefore(successDiv, container.firstChild);
+    setTimeout(() => successDiv.remove(), 3000);
 }

@@ -65,3 +65,34 @@ def clear_map(session_id):
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+@grid_bp.route('/session/<session_id>/effect', methods=['POST'])
+@login_required
+def add_spell_effect(session_id):
+    """Add a spell area effect to the grid."""
+    try:
+        data = request.get_json()
+        row    = data.get('row')
+        col    = data.get('col')
+        color  = data.get('color', '#9B59B6')   # purple default
+        label  = data.get('label', 'Spell')
+
+        if row is None or col is None:
+            return jsonify({"status": "error", "message": "row and col required"}), 400
+
+        success = firebase.add_grid_effect(
+            session_id=session_id,
+            user_id=label,          # reuse user_id as a label for now
+            effect_type='radius',
+            x=col,                  # grid service uses x/y → col/row
+            y=row,
+            range=1,                # range=1 → 3×3 area
+            color=color
+        )
+
+        if success:
+            return jsonify({"status": "success", "message": f"Effect added at row={row}, col={col}"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Firebase update failed"}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
